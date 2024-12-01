@@ -1,47 +1,12 @@
 #!/bin/bash
 
 echo ""
-cd /root/ceremonyclient/node
 
-
-
-# Determine the CPU arch and OS, and the appropriate binaries
-RELEASE_ARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
-RELEASE_OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-
-if [[ "$RELEASE_ARCH" = "x86_64" ]]; then
-    if [[ "$RELEASE_OS" = "linux" ]]; then
-        :
-    elif [[ "$RELEASE_OS" = "darwin" ]]; then
-        :
-    else
-        echo "Error: couldn't match OS to available OS's for Quil. Run \`uname -s | tr '[:upper:]' '[:lower:]'\` to debug."
-        exit 1
-    fi
-elif [[ "$RELEASE_ARCH" = "aarch64" || "$RELEASE_ARCH" = "arm64" ]]; then
-    RELEASE_ARCH="arm64"
-    if [[ "$RELEASE_OS" = "linux" ]]; then
-        :
-    elif [[ "$RELEASE_OS" = "darwin" ]]; then
-        :
-    else
-        echo "Error: couldn't match OS to available OS's for Quil. Run \`uname -s | tr '[:upper:]' '[:lower:]'\` to debug."
-        exit 1
-    fi
-else
-    echo "Error: couldn't determine CPU architecture. Run \`uname -m | tr '[:upper:]' '[:lower:]'\` to debug."
-    exit 1
-fi
-
-echo "Determined environment: $RELEASE_ARCH, $RELEASE_OS"
-
-echo ""
-sleep 3
-
-
+RELEASE_ARCH=$(./ceremonyclient_env.sh -a)
+RELEASE_OS=$(./ceremonyclient_env.sh -o)
 
 ## Function to fetch update files
-fetch() {
+FETCH_FILES_func() {
     ## NODE
     # List files in most recent release
     nodefiles=$(curl -s -S https://releases.quilibrium.com/release | grep $RELEASE_OS-$RELEASE_ARCH)
@@ -84,7 +49,7 @@ fetch() {
     done
 }
 
-update_daemon_file_linux() {
+UPDATE_DAEMON_FILE_LINUX_func() {
     systemctl stop ceremonyclient
     sleep 2
 
@@ -106,7 +71,7 @@ update_daemon_file_linux() {
     systemctl status ceremonyclient
 }
 
-update_daemon_file_macos() {
+UPDATE_DAEMON_FILE_MACOS_func() {
     sudo launchctl disable system/local.ceremonyclient
     sleep 2
     sudo launchctl bootout system /Library/LaunchDaemons/local.ceremonyclient.plist
@@ -115,7 +80,7 @@ update_daemon_file_macos() {
     latest_node_file=$(echo "$nodefiles" | grep "$RELEASE_OS-$RELEASE_ARCH"$)
     echo "Latest node file: $latest_node_file"
     chmod +x $latest_node_file
-    sed -i "/^ExecStart\=.*/c ExecStart\=/root/ceremonyclient/node/$latest_node_file" /lib/systemd/system/ceremonyclient.service
+    sudo sed -i 's/node-[^<]*/node-2.0.4.3-darwin-arm64/' /Library/LaunchDaemons/local.ceremonyclient.plist
 
     latest_qclient_file=$(echo "$qclientfiles" | grep "$RELEASE_OS-$RELEASE_ARCH"$)
     echo ""
@@ -129,17 +94,17 @@ update_daemon_file_macos() {
     launchctl kickstart -kp system/local.ceremonyclient
     echo "ceremonyclient updated and restarted. Waiting 60s before printing a status read from the ceremonyclient daemon."
     sleep 60
-    tail -F /
+    tail -F /Users/robbie/ceremonyclient.log
 }
 
 
 
-fetch
+FETCH_FILES_func
 
 if [[ "$RELEASE_OS" = "linux" ]]; then
-    update_daemon_file_linux
+    UPDATE_DAEMON_FILE_LINUX_func
 elif [[ "$RELEASE_OS" = "darwin" ]]; then
-    update_daemon_file_macos
+    UPDATE_DAEMON_FILE_MACOS_func
 fi
 
 echo ""
