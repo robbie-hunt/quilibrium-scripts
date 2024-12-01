@@ -22,7 +22,7 @@ USAGE_func() {
 CHECK_OS=""
 CHECK_ARCH=""
 
-while getopts "hxao:" opt; do
+while getopts "hxao" opt; do
     case "$opt" in
         x) set -x;;
         h) USAGE_func;;
@@ -52,9 +52,9 @@ CHECK_ARCH_func() {
 CHECK_OS_func() {
     RELEASE_OS=$(uname -s | tr '[:upper:]' '[:lower:]')
     if [[ "$RELEASE_OS" = "linux" ]]; then
-        :
+        echo "$RELEASE_OS"
     elif [[ "$RELEASE_OS" = "darwin" ]]; then
-        :
+        echo "$RELEASE_OS"
     else
         echo "Error: couldn't match OS '$RELEASE_OS' to available OS's for Quil."
         echo "Please check this yourself by running \`uname -s | tr '[:upper:]' '[:lower:]'\`."
