@@ -8,8 +8,8 @@ USAGE_func() {
     echo ""
     echo "This tool checks various aspects of the environment of this machine and the Quilibrium node."
     echo ""
-    echo "USAGE: bash ceremonyclient_env.sh [-h] [-x] [-env-init] [-env-update [-arch] [-os] [-key]"
-    echo "                                  [-latest-versions] [-latest-files]"
+    echo "USAGE: bash ceremonyclient_env.sh [-h] [-x] [-env-init] [-env-update [-arch] [-os] [-key string]"
+    echo "                                  [-latest-versions 'node|qclient|'-'installed|release|'-'files|'-'quiet|']"
     echo ""
     echo "       -h                               Display this help dialogue."
     echo "       -x                               For debugging the script; sets the x shell builtin, 'set -x'."
@@ -19,11 +19,8 @@ USAGE_func() {
     echo "       -os                              Print the system OS."
     echo "       -key                             Check the .localenv for a key and print the corresponding value."
     echo "       -latest-versions                 Print the latest versions of node & qclient binaries."
-    echo "       -latest-versions-files           Print the latest versions of node & qclient binaries as files (installed and available through release)."
-    echo "       -latest-node-versions            Print the latest versions of node binaries."
-    echo "       -latest-node-versions-files      Print the latest versions of node binaries as files (installed and available through release)."
-    echo "       -latest-qclient-versions         Print the latest versions of qclient binaries."
-    echo "       -latest-qclient-versions-files   Print the latest versions of qclient binaries as files (installed and available through release)."
+    echo "                                        Provide a string to thin down results: 'node|qclient|'-'installed|release|'-'files|'-'quiet|';"
+    echo "                                        provide no string to get all options."
     echo ""
     exit 0
 }
@@ -31,7 +28,6 @@ USAGE_func() {
 # Initialise the variables used in this script as zero/empty variables
 CHECK_OS=""
 CHECK_ARCH=""
-LATEST_VERSIONS_PRINT_FILES=""
 
 CHECK_ARCH_func() {
     RELEASE_ARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
@@ -105,81 +101,133 @@ EOF
 }
 
 LATEST_INSTALLED_VERSIONS_func() {
+    local TYPE=$1
+
     # List all relevant files
-    find $(PRINT_LOCAL_ENV_KEY_VALUE_func "ceremonyclient_root_dir") -type f -name "$1-*-$RELEASE_LINE" | \
+    find $(PRINT_LOCAL_ENV_KEY_VALUE_func "ceremonyclient_root_dir") -type f -name "$TYPE-*-$RELEASE_LINE" | \
     # Extract the version numbers using grep and awk
     awk -F'-' '{sub(/-$RELEASE_LINE.*/, "", $2); print $2, $0}' | \
     # Sort by version numbers in descending order
     sort -t. -k1,1nr -k2,2nr -k3,3nr -k4,4nr | \
     # Take the first line (highest version)
     head -n 1 | \
-    if [[ $LATEST_VERSIONS_PRINT_FILES == 0 ]]; then
-        # Print the version number
-        awk -F' ' '{print $1}'
-    else
-        # Print the full filename
-        awk -F' ' '{print $2}'
-    fi
+    if [[ $FILES_REQUESTED = FALSE ]]; then awk -F' ' '{print $1}'; else awk -F' ' '{print $2}'; fi
+}
+
+LATEST_RELEASE_VERSIONS_func() {
+    local TYPE=$1
+    local RELEASE_URL=$2
+
+    # List all relevant files
+    curl -s -S $RELEASE_URL | grep $RELEASE_LINE | \
+    # Extract the version numbers using grep and awk
+    awk -F'-' '{sub(/-$RELEASE_LINE.*/, "", $2); print $2, $0}' | \
+    # Sort by version numbers in descending order
+    sort -t. -k1,1nr -k2,2nr -k3,3nr -k4,4nr | \
+    # Take the first line (highest version)
+    head -n 1 | \
+    if [[ $FILES_REQUESTED = FALSE ]]; then awk -F' ' '{print $1}'; else awk -F' ' '{print $2}'; fi
 }
 
 LATEST_VERSIONS_func() {
-    NODE_FILES_RELEASE_URL="https://releases.quilibrium.com/release"
-    QCLIENT_FILES_RELEASE_URL="https://releases.quilibrium.com/qclient-release"
+    # Initialise options and their corresponding checkers
+    local OPTIONS="${1:-}"
+    local NODE_REQUESTED=FALSE
+    local QCLIENT_REQUESTED=FALSE
+    local INSTALLED_REQUESTED=FALSE
+    local RELEASE_REQUESTED=FALSE
+    local FILES_REQUESTED=FALSE
+    local QUIET=FALSE
 
-    LATEST_NODE_FILES_RELEASE=$(curl -s -S $NODE_FILES_RELEASE_URL | grep $RELEASE_OS-$RELEASE_ARCH)
-    LATEST_QCLIENT_FILES_RELEASE=$(curl -s -S $QCLIENT_FILES_RELEASE_URL | grep $RELEASE_OS-$RELEASE_ARCH)
-    
-    NODE_VERSIONS_func() {
-        if ! [[ -z $LATEST_NODE_FILES_RELEASE && $(echo "$LATEST_NODE_FILES_RELEASE" | grep *"node-.*-$RELEASE_OS-$RELEASE_ARCH"*) ]]; then
-            if [[ $LATEST_VERSIONS_PRINT_FILES == 0 ]]; then
-                LATEST_NODE_FILE_RELEASE=$(echo "$LATEST_NODE_FILES_RELEASE" | grep "^node-.*-$RELEASE_OS-$RELEASE_ARCH$" | awk -F'-' '{print $2}')
-                echo "Latest node version (release): $LATEST_NODE_FILE_RELEASE"
-                echo "Latest node version (installed): $(LATEST_INSTALLED_VERSIONS_func 'node')"
+    # Check if no option is provided (i.e., show both node and qclient info)
+    if [[ -z "$OPTIONS" || "$OPTIONS" == 'quiet' ]]; then
+        NODE_REQUESTED=TRUE
+        QCLIENT_REQUESTED=TRUE
+        INSTALLED_REQUESTED=TRUE
+        RELEASE_REQUESTED=TRUE
+        FILES_REQUESTED=FALSE
+        QUIET=TRUE
+    else
+        # Check for presence of 'node' or 'qclient' in the options
+        if [[ ! "$OPTIONS" =~ "node" && ! "$OPTIONS" =~ "qclient" ]]; then NODE_REQUESTED=TRUE && QCLIENT_REQUESTED=TRUE; fi
+        if [[ "$OPTIONS" =~ "node" ]]; then NODE_REQUESTED=TRUE; fi
+        if [[ "$OPTIONS" =~ "qclient" ]]; then QCLIENT_REQUESTED=TRUE; fi
+        # Check for presence of 'installed' or 'release' in the options
+        if [[ ! "$OPTIONS" =~ "installed" && ! "$OPTIONS" =~ "release" ]]; then INSTALLED_REQUESTED=TRUE && RELEASE_REQUESTED=TRUE; fi
+        if [[ "$OPTIONS" =~ "installed" ]]; then INSTALLED_REQUESTED=TRUE; fi
+        if [[ "$OPTIONS" =~ "release" ]]; then RELEASE_REQUESTED=TRUE; fi
+        # Check for presence of 'files' in the options
+        if [[ "$OPTIONS" =~ "files" ]]; then FILES_REQUESTED=TRUE; fi
+        # Check for presence of 'quiet' in the options
+        if [[ "$OPTIONS" =~ "quiet" ]]; then QUIET=TRUE; fi
+    fi
+
+    local NODE_RELEASE_URL="https://releases.quilibrium.com/release"
+    local QCLIENT_RELEASE_URL="https://releases.quilibrium.com/qclient-release"
+
+    local LATEST_NODE_FILES_RELEASE=$(curl -s -S $NODE_RELEASE_URL | grep $RELEASE_OS-$RELEASE_ARCH)
+    local LATEST_QCLIENT_FILES_RELEASE=$(curl -s -S $QCLIENT_RELEASE_URL | grep $RELEASE_OS-$RELEASE_ARCH)
+
+    # if node then
+        # if installed then
+            # if files then
+                # if quiet then
+        # if release then
+            # if files then
+                # if quiet then
+    # if qclient then
+
+    if [[ $FILES_REQUESTED = TRUE ]]; then
+        local FILES_TEXT="files"
+    else
+        local FILES_TEXT="version"
+    fi
+
+    if [[ $NODE_REQUESTED = TRUE ]]; then
+        local TYPE='node'
+
+        if [[ $INSTALLED_REQUESTED = TRUE ]]; then
+            local SOURCE='installed'
+            if [[ $QUIET = TRUE ]]; then
+                LATEST_INSTALLED_VERSIONS_func "$TYPE"
             else
-                LATEST_NODE_FILE_RELEASE=$(echo "$LATEST_NODE_FILES_RELEASE" | grep "^node-.*-$RELEASE_OS-$RELEASE_ARCH$")
-                echo "Latest node file (release): $LATEST_NODE_FILE_RELEASE"
-                echo "Latest node file (installed): $(LATEST_INSTALLED_VERSIONS_func 'node')"
+                echo "Latest $TYPE $FILES_TEXT ($SOURCE): $(LATEST_INSTALLED_VERSIONS_func "$TYPE")"
             fi
-        else
-            echo "Error: Trouble with the output of $NODE_FILES_RELEASE_URL for the LATEST_NODE_FILES_RELEASE variable."
-            echo "Variable contents are below:"
-            echo "$LATEST_NODE_FILES_RELEASE"
-            return 1
         fi
-    }
-
-    QCLIENT_VERSIONS_func() {
-        if ! [[ -z $LATEST_QCLIENT_FILES_RELEASE && $(echo "$LATEST_QCLIENT_FILES_RELEASE" | grep *"qclient-.*-$RELEASE_OS-$RELEASE_ARCH"*) ]]; then
-            if [[ $LATEST_VERSIONS_PRINT_FILES == 0 ]]; then
-                LATEST_QCLIENT_FILE_RELEASE=$(echo "$LATEST_QCLIENT_FILES_RELEASE" | grep "^qclient-.*-$RELEASE_OS-$RELEASE_ARCH$" | awk -F'-' '{print $2}')
-                echo "Latest qclient version (release): $LATEST_QCLIENT_FILE_RELEASE"
-                echo "Latest qclient version (installed): $(LATEST_INSTALLED_VERSIONS_func 'qclient')"
+        if [[ $RELEASE_REQUESTED = TRUE ]]; then
+            local SOURCE='release'
+            if [[ $QUIET = TRUE ]]; then
+                LATEST_RELEASE_VERSIONS_func "$TYPE" $NODE_RELEASE_URL
             else
-                LATEST_QCLIENT_FILE_RELEASE=$(echo "$LATEST_QCLIENT_FILES_RELEASE" | grep "^qclient-.*-$RELEASE_OS-$RELEASE_ARCH$")
-                echo "Latest qclient file (release): $LATEST_QCLIENT_FILE_RELEASE"
-                echo "Latest qclient file (installed): $(LATEST_INSTALLED_VERSIONS_func 'qclient')"
+                echo "Latest $TYPE $FILES_TEXT ($SOURCE): $(LATEST_RELEASE_VERSIONS_func "$TYPE" $NODE_RELEASE_URL)"
             fi
-        else
-            echo "Error: Trouble with the output of $QCLIENT_FILES_RELEASE_URL for the LATEST_QCLIENT_FILES_RELEASE variable."
-            echo "Variable contents are below:"
-            echo "$LATEST_QCLIENT_FILES_RELEASE"
-            return 1
         fi
-    }
+    fi
+    if [[ $QCLIENT_REQUESTED = TRUE ]]; then
+        local TYPE='qclient'
 
-    if [[ -z "${1:-}" ]]; then
-        NODE_VERSIONS_func
-        QCLIENT_VERSIONS_func
-    elif [[ "$1" == "node" ]]; then
-        NODE_VERSIONS_func
-    elif [[ "$1" == "qclient" ]]; then
-        QCLIENT_VERSIONS_func
+        if [[ $INSTALLED_REQUESTED = TRUE ]]; then
+            local SOURCE='installed'
+            if [[ $QUIET = TRUE ]]; then
+                LATEST_INSTALLED_VERSIONS_func "$TYPE"
+            else
+                echo "Latest $TYPE $FILES_TEXT ($SOURCE): $(LATEST_INSTALLED_VERSIONS_func "$TYPE")"
+            fi
+        fi
+        if [[ $RELEASE_REQUESTED = TRUE ]]; then
+            local SOURCE='release'
+            if [[ $QUIET = TRUE ]]; then
+                LATEST_RELEASE_VERSIONS_func "$TYPE" $QCLIENT_RELEASE_URL
+            else
+                echo "Latest $TYPE $FILES_TEXT ($SOURCE): $(LATEST_RELEASE_VERSIONS_func "$TYPE" $QCLIENT_RELEASE_URL)"
+            fi
+        fi
     fi
 }
 
 
 
-while true; do
+while TRUE; do
     case "$1" in
         -x) set -x;;
         -h) USAGE_func;;
@@ -187,13 +235,8 @@ while true; do
         -env-update) UPDATE_LOCAL_ENV_func;;
         -arch) CHECK_ARCH_func;;
         -os) CHECK_OS_func;;
-        -key) CHECK_LOCAL_ENV_KEY_func "$OPTARG";;
-        -latest-versions) LATEST_VERSIONS_PRINT_FILES="0"; LATEST_VERSIONS_func;;
-        -latest-versions-files) LATEST_VERSIONS_PRINT_FILES="1"; LATEST_VERSIONS_func;;
-        -latest-node-versions) LATEST_VERSIONS_PRINT_FILES="0"; LATEST_VERSIONS_func 'node';;
-        -latest-qclient-versions) LATEST_VERSIONS_PRINT_FILES="0"; LATEST_VERSIONS_func 'qclient';;
-        -latest-node-versions-files) LATEST_VERSIONS_PRINT_FILES="1"; LATEST_VERSIONS_func 'node';;
-        -latest-qclient-versions-files) LATEST_VERSIONS_PRINT_FILES="1"; LATEST_VERSIONS_func 'qclient';;
+        -key) PRINT_LOCAL_ENV_KEY_VALUE_func "$2";;
+        -latest-versions) LATEST_VERSIONS_func "${2:-}";;
         *) USAGE_func;;
     esac
     exit

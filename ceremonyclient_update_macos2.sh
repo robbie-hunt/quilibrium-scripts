@@ -6,6 +6,11 @@ RELEASE_ARCH=$(./ceremonyclient_env.sh -arch)
 RELEASE_OS=$(./ceremonyclient_env.sh -os)
 RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
 
+LATEST_NODE_VERSION=$(./ceremonyclient_env.sh -latest-node-version)
+LATEST_QCLIENT_VERSION=$(./ceremonyclient_env.sh -latest-qclient-version)
+LATEST_NODE_FILE_RELEASE=$(./ceremonyclient_env.sh -latest-node-version)
+LATEST_QCLIENT_FILE_RELEASE=$(./ceremonyclient_env.sh -latest-node-version)
+
 ## Function to fetch update files
 FETCH_FILES_func() {
     ## NODE
