@@ -12,8 +12,10 @@ USAGE_func() {
     echo ""
     echo "       -h    Display this help dialogue."
     echo "       -x    For debugging the script; sets the x shell builtin, 'set -x'."
+    echo "       -i    Initialise the .localenv file."
     echo "       -a    Print the CPU architecture."
     echo "       -o    Print the system OS."
+    echo "       -d    Print the ceremonyclient directory."
     echo ""
     exit 0
 }
@@ -26,13 +28,34 @@ while getopts "hxao" opt; do
     case "$opt" in
         x) set -x;;
         h) USAGE_func;;
-        a) CHECK_ARCH="1";;
-        o) CHECK_OS="1";;
+        i) INITIALISE_LOCAL_ENV_func;;
+        u) UPDATE_LOCAL_ENV_func;;
+        a) CHECK_ARCH_func;;
+        o) CHECK_OS_func;;
+        d) PRINT_CEREMONYCLIENT_DIR_func;;
     esac
 done
 shift $((OPTIND -1))
 
 
+
+INITIALISE_LOCAL_ENV_func() {
+    if [[ -f .localenv && -s .localenv ]]; then
+        echo ".localenv file already exists, contents printed below:"
+        cat .localenv
+        return 1
+    else
+        touch .localenv
+        sudo tee .localenv > /dev/null <<EOF
+ceremonyclient_root_dir=
+node_latest_installed=
+node_latest_released=
+qclient_latest_installed=
+qclient_latest_released=
+peer_id=
+EOF
+    fi
+}
 
 CHECK_ARCH_func() {
     RELEASE_ARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
@@ -46,7 +69,6 @@ CHECK_ARCH_func() {
         echo "Please check this yourself by running \`uname -m | tr '[:upper:]' '[:lower:]'\`."
         exit 1
     fi
-
 }
 
 CHECK_OS_func() {
@@ -60,15 +82,10 @@ CHECK_OS_func() {
         echo "Please check this yourself by running \`uname -s | tr '[:upper:]' '[:lower:]'\`."
         exit 1
     fi
-
 }
 
-if [[ -n "$CHECK_ARCH" ]]; then
-    CHECK_ARCH_func
-fi
+PRINT_CEREMONYCLIENT_DIR_func() {
 
-if [[ -n "$CHECK_OS" ]]; then
-    CHECK_OS_func
-fi
+}
 
 exit 0
