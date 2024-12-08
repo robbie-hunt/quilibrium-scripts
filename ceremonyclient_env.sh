@@ -24,7 +24,7 @@ USAGE_func() {
 CHECK_OS=""
 CHECK_ARCH=""
 
-while getopts "hxao" opt; do
+while getopts "xhiuaod" opt; do
     case "$opt" in
         x) set -x;;
         h) USAGE_func;;
@@ -33,6 +33,7 @@ while getopts "hxao" opt; do
         a) CHECK_ARCH_func;;
         o) CHECK_OS_func;;
         d) PRINT_CEREMONYCLIENT_DIR_func;;
+        *) USAGE_func;;
     esac
 done
 shift $((OPTIND -1))
