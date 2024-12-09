@@ -6,10 +6,19 @@ RELEASE_ARCH=$(./ceremonyclient_env.sh -arch)
 RELEASE_OS=$(./ceremonyclient_env.sh -os)
 RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
 
-LATEST_NODE_VERSION=$(./ceremonyclient_env.sh -latest-node-version)
-LATEST_QCLIENT_VERSION=$(./ceremonyclient_env.sh -latest-qclient-version)
-LATEST_NODE_FILE_RELEASE=$(./ceremonyclient_env.sh -latest-node-version)
-LATEST_QCLIENT_FILE_RELEASE=$(./ceremonyclient_env.sh -latest-node-version)
+LATEST_VERSIONS=$(./ceremonyclient_env.sh -latest-version 'files-quiet')
+LATEST_VERSION_NODE_INSTALLED=$(echo "$LATEST_VERSIONS" | sed '1q;d')
+LATEST_VERSION_NODE_RELEASE=$(echo "$LATEST_VERSIONS" | sed '2q;d')
+LATEST_VERSION_QCLIENT_INSTALLED=$(echo "$LATEST_VERSIONS" | sed '3q;d')
+LATEST_VERSION_QCLIENT_RELEASE=$(echo "$LATEST_VERSIONS" | sed '4q;d')
+
+echo "LATEST_VERSIONS: $LATEST_VERSIONS"
+echo "LATEST_VERSION_NODE_INSTALLED: $LATEST_VERSION_NODE_INSTALLED"
+echo "LATEST_VERSION_NODE_RELEASE: $LATEST_VERSION_NODE_RELEASE"
+echo "LATEST_VERSION_QCLIENT_INSTALLED: $LATEST_VERSION_QCLIENT_INSTALLED"
+echo "LATEST_VERSION_QCLIENT_RELEASE: $LATEST_VERSION_QCLIENT_RELEASE"
+
+exit 0
 
 ## Function to fetch update files
 FETCH_FILES_func() {

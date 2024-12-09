@@ -9,7 +9,7 @@ USAGE_func() {
     echo "This tool checks various aspects of the environment of this machine and the Quilibrium node."
     echo ""
     echo "USAGE: bash ceremonyclient_env.sh [-h] [-x] [-env-init] [-env-update [-arch] [-os] [-key string]"
-    echo "                                  [-latest-versions 'node|qclient|'-'installed|release|'-'files|'-'quiet|']"
+    echo "                                  [-latest-version 'node|qclient|'-'installed|release|'-'files|'-'quiet|']"
     echo ""
     echo "       -h                               Display this help dialogue."
     echo "       -x                               For debugging the script; sets the x shell builtin, 'set -x'."
@@ -18,7 +18,7 @@ USAGE_func() {
     echo "       -arch                            Print the CPU architecture."
     echo "       -os                              Print the system OS."
     echo "       -key                             Check the .localenv for a key and print the corresponding value."
-    echo "       -latest-versions                 Print the latest versions of node & qclient binaries."
+    echo "       -latest-version                 Print the latest versions of node & qclient binaries."
     echo "                                        Provide a string to thin down results: 'node|qclient|'-'installed|release|'-'files|'-'quiet|';"
     echo "                                        provide no string to get all options."
     echo ""
@@ -168,15 +168,6 @@ LATEST_VERSIONS_func() {
     local LATEST_NODE_FILES_RELEASE=$(curl -s -S $NODE_RELEASE_URL | grep $RELEASE_OS-$RELEASE_ARCH)
     local LATEST_QCLIENT_FILES_RELEASE=$(curl -s -S $QCLIENT_RELEASE_URL | grep $RELEASE_OS-$RELEASE_ARCH)
 
-    # if node then
-        # if installed then
-            # if files then
-                # if quiet then
-        # if release then
-            # if files then
-                # if quiet then
-    # if qclient then
-
     if [[ $FILES_REQUESTED = TRUE ]]; then
         local FILES_TEXT="files"
     else
@@ -236,7 +227,7 @@ while TRUE; do
         -arch) CHECK_ARCH_func;;
         -os) CHECK_OS_func;;
         -key) PRINT_LOCAL_ENV_KEY_VALUE_func "$2";;
-        -latest-versions) LATEST_VERSIONS_func "${2:-}";;
+        -latest-version) LATEST_VERSIONS_func "${2:-}";;
         *) USAGE_func;;
     esac
     exit
