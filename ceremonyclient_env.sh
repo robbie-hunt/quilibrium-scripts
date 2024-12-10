@@ -91,11 +91,13 @@ INITIALISE_LOCAL_ENV_func() {
 ceremonyclient_root_dir=
 ceremonyclient_node_dir=
 ceremonyclient_config=
-node_latest_installed=
-node_latest_released=
-qclient_latest_installed=
-qclient_latest_released=
+node_latest_version_installed=
+node_latest_version_released=
+qclient_latest_version_installed=
+qclient_latest_version_released=
 peer_id=
+node_release_url=
+qclient_release_url=
 EOF
     fi
 }
