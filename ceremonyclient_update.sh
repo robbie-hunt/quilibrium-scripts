@@ -109,7 +109,7 @@ CONFIRM_NEW_BINARIES_func
 # If cluster
   # Find start-cluster file, replace node-2.0.5.1 line
 # If standalone node
-  # Replace node-2.0.5.1 line in each daemon file
+  # Replace node-2.0.5.1 line in Linux/macOS daemon file
 # Reload & restart daemons
 
 UPDATE_DAEMON_FILE_func() {
@@ -127,9 +127,39 @@ UPDATE_DAEMON_FILE_func() {
     fi
 }
 
+ALTER_RELOAD_RESTART_DAEMONS() {
+    if [[ "$RELEASE_OS" == "darwin" ]]; then
+        sudo launchctl disable system/local.ceremonyclient
+        sleep 2
+        sudo launchctl bootout system /Library/LaunchDaemons/local.ceremonyclient.plist
+        sleep 2
 
+        UPDATE_DAEMON_FILE_func
 
+        sudo launchctl enable system/local.ceremonyclient
+        sleep 2
+        sudo launchctl bootstrap system /Library/LaunchDaemons/local.ceremonyclient.plist
+        sleep 2
+        launchctl kickstart -kp system/local.ceremonyclient
 
+        echo "ceremonyclient updated and restarted. Waiting 60s before printing a status read from the ceremonyclient daemon."
+        sleep 60
+        tail -F /Users/robbie/ceremonyclient.log
+    elif [[ "$RELEASE_OS" == "linux" ]]; then
+        systemctl stop ceremonyclient
+        sleep 2
+
+        UPDATE_DAEMON_FILE_func
+
+        systemctl daemon-reload
+        sleep 2
+        systemctl restart ceremonyclient
+
+        echo "ceremonyclient daemon updated and reloaded. Waiting 60s before printing a status read from the ceremonyclient daemon."
+        sleep 60
+        systemctl status ceremonyclient
+    fi
+}
 
 while getopts "xhc" opt; do
     case "$opt" in
@@ -142,6 +172,11 @@ done
 shift $((OPTIND -1))
 
 exit 0
+
+
+
+
+
 
 UPDATE_DAEMON_FILE_LINUX_func() {
     systemctl stop ceremonyclient
