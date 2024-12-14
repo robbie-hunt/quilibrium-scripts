@@ -1,5 +1,23 @@
 #!/bin/bash
 
+# Set shell options
+set -eou pipefail
+#set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
+
+USAGE_func() {
+    echo ""
+    echo "Updates the Quilibrium node binaries (including qclient) to latest versions, and restarts node daemons."
+    echo ""
+    echo "USAGE: bash ceremonyclient_update.sh [-h] ] [-x] [-c]"
+    echo ""
+    echo "       -h    Display this help dialogue."
+    echo "       -x    For debugging the script; sets the x shell builtin, 'set -x'."
+    echo "       -c    This node is part of a cluster."
+    echo "             (By default this is set to null, meaning this node is run as a standalone node.)"
+    echo ""
+    exit 0
+}
+
 echo ""
 
 CLUSTER=0
@@ -16,7 +34,6 @@ LATEST_NODE_RELEASE=$(echo "$LATEST_VERSIONS" | sed '2q;d')
 LATEST_QCLIENT_INSTALLED=$(echo "$LATEST_VERSIONS" | sed '3q;d')
 LATEST_QCLIENT_RELEASE=$(echo "$LATEST_VERSIONS" | sed '4q;d')
 
-## Function to fetch new files
 FETCH_FILES_func() {
     local FILE_PATTERN="$1"
     local TYPE="$(echo $FILE_PATTERN | awk -F'-' '{print $1}')_release_url"
@@ -32,9 +49,9 @@ FETCH_FILES_func() {
     fi
 
     for RELEASE_FILE in $RELEASE_FILES_AVAILABLE; do
-#        if curl -s -S "https://releases.quilibrium.com/$RELEASE_FILE" > "$CEREMONYCLIENT_NODE_DIR/$RELEASE_FILE"; then
+        if curl -s -S "https://releases.quilibrium.com/$RELEASE_FILE" > "$CEREMONYCLIENT_NODE_DIR/$RELEASE_FILE"; then
             echo "Downloaded and installed file: $RELEASE_FILE."
-#        fi
+        fi
     done
 }
 
@@ -50,18 +67,6 @@ COMPARE_VERSIONS_func() {
         FETCH_FILES_func "$FILE_RELEASE"
     fi
 }
-
-#COMPARE_VERSIONS_func "$LATEST_NODE_INSTALLED" "$LATEST_NODE_RELEASE"
-#COMPARE_VERSIONS_func "$LATEST_QCLIENT_INSTALLED" "$LATEST_QCLIENT_RELEASE"
-#COMPARE_VERSIONS_func "/Users/robbie/ceremonyclient/node/node-2.0.4-darwin-arm64" "$LATEST_NODE_RELEASE"
-#COMPARE_VERSIONS_func "/Users/robbie/ceremonyclient/node/qclient-2.0.4-darwin-arm64" "$LATEST_QCLIENT_RELEASE"
-
-# Check to see if new release file is in node directory
-  # Confirm sizes of sigs are correct
-# Update daemons
-  # If node, update daemon with new exec start
-  # If cluster, update start-cluster file
-# Start cluster, supply log file/means of seeing if ok, after 30s print log and exit
 
 CHECK_FILESIZES_func() {
     local FILES_TO_CHECK="$1"
@@ -104,30 +109,25 @@ CONFIRM_NEW_BINARIES_func() {
     fi
 }
 
-CONFIRM_NEW_BINARIES_func
-
-# If cluster
-  # Find start-cluster file, replace node-2.0.5.1 line
-# If standalone node
-  # Replace node-2.0.5.1 line in Linux/macOS daemon file
-# Reload & restart daemons
-
 UPDATE_DAEMON_FILE_func() {
     if [[ $CLUSTER == 1 ]]; then
         # Update start_cluster script
         sed -i "s/NODE_BINARY\=[^<]*/$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
+        # sed "s/NODE_BINARY\=[^<]*/NODE_BINARY\=$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
     else
         if [[ "$RELEASE_OS" == "darwin" ]]; then
             # Update launchctl plist file
             sudo sed -i "s/node-[^<]*/$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" /Library/LaunchDaemons/local.ceremonyclient.plist
+            # sudo sed "s/node-[^<]*/$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" /Library/LaunchDaemons/local.ceremonyclient.plist
         elif [[ "$RELEASE_OS" == "linux" ]]; then
             # Update systemctl service file
             sed -i "/^ExecStart\=.*/c ExecStart\=$NEW_LATEST_NODE_FILE_INSTALLED_PATH" /lib/systemd/system/ceremonyclient.service
+            # sed "/^ExecStart\=.*/c ExecStart\=$NEW_LATEST_NODE_FILE_INSTALLED_PATH" /lib/systemd/system/ceremonyclient.service
         fi
     fi
 }
 
-ALTER_RELOAD_RESTART_DAEMONS() {
+ALTER_RELOAD_RESTART_DAEMONS_func() {
     if [[ "$RELEASE_OS" == "darwin" ]]; then
         sudo launchctl disable system/local.ceremonyclient
         sleep 2
@@ -161,79 +161,23 @@ ALTER_RELOAD_RESTART_DAEMONS() {
     fi
 }
 
+
+
 while getopts "xhc" opt; do
     case "$opt" in
         x) set -x;;
-        h) USAGE_func;;
+        h) USAGE_func; exit 0;;
         c) CLUSTER=1;;
-        *) USAGE_func;;
+        *) USAGE_func; exit 0;;
     esac
 done
 shift $((OPTIND -1))
 
-exit 0
+COMPARE_VERSIONS_func "$LATEST_NODE_INSTALLED" "$LATEST_NODE_RELEASE"
+COMPARE_VERSIONS_func "$LATEST_QCLIENT_INSTALLED" "$LATEST_QCLIENT_RELEASE"
 
+CONFIRM_NEW_BINARIES_func
 
+ALTER_RELOAD_RESTART_DAEMONS_func
 
-
-
-
-UPDATE_DAEMON_FILE_LINUX_func() {
-    systemctl stop ceremonyclient
-    sleep 2
-
-    latest_node_file=$(echo "$nodefiles" | grep "$RELEASE_LINE"$)
-    chmod +x $latest_node_file
-    sed -i "/^ExecStart\=.*/c ExecStart\=/root/ceremonyclient/node/$latest_node_file" /lib/systemd/system/ceremonyclient.service
-
-    latest_qclient_file=$(echo "$qclientfiles" | grep "$RELEASE_LINE"$)
-    echo ""
-    echo "Latest qclient file: $latest_qclient_file"
-    chmod +x $latest_qclient_file
-
-    systemctl daemon-reload
-    sleep 2
-    systemctl restart ceremonyclient
-    echo "ceremonyclient daemon updated and reloaded. Waiting 60s before printing a status read from the ceremonyclient daemon."
-    sleep 60
-    systemctl status ceremonyclient
-}
-
-UPDATE_DAEMON_FILE_MACOS_func() {
-    sudo launchctl disable system/local.ceremonyclient
-    sleep 2
-    sudo launchctl bootout system /Library/LaunchDaemons/local.ceremonyclient.plist
-    sleep 2
-
-    latest_node_file=$(echo "$nodefiles" | grep "$RELEASE_LINE"$)
-    echo "Latest node file: $latest_node_file"
-    chmod +x $latest_node_file
-    sudo sed -i 's/node-[^<]*/node-2.0.4.3-darwin-arm64/' /Library/LaunchDaemons/local.ceremonyclient.plist
-
-    latest_qclient_file=$(echo "$qclientfiles" | grep "$RELEASE_LINE"$)
-    echo ""
-    echo "Latest qclient file: $latest_qclient_file"
-    chmod +x $latest_qclient_file
-
-    sudo launchctl enable system/local.ceremonyclient
-    sleep 2
-    sudo launchctl bootstrap system /Library/LaunchDaemons/local.ceremonyclient.plist
-    sleep 2
-    launchctl kickstart -kp system/local.ceremonyclient
-    echo "ceremonyclient updated and restarted. Waiting 60s before printing a status read from the ceremonyclient daemon."
-    sleep 60
-    tail -F /Users/robbie/ceremonyclient.log
-}
-
-
-
-FETCH_FILES_func
-
-if [[ "$RELEASE_OS" = "linux" ]]; then
-    UPDATE_DAEMON_FILE_LINUX_func
-elif [[ "$RELEASE_OS" = "darwin" ]]; then
-    UPDATE_DAEMON_FILE_MACOS_func
-fi
-
-echo ""
 exit 0
