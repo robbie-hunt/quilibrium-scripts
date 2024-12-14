@@ -10,13 +10,23 @@ kill_process() {
 
 trap kill_process SIGINT
 
+
+
+RELEASE_ARCH=$(./ceremonyclient_env.sh -arch)
+RELEASE_OS=$(./ceremonyclient_env.sh -os)
+RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
+
 START_CORE_INDEX=1
-DATA_WORKER_COUNT=$(sysctl -n hw.logicalcpu)
+if [[ "$RELEASE_OS" == "darwin" ]]; then
+    DATA_WORKER_COUNT=$(sysctl -n hw.logicalcpu)
+elif [[ "$RELEASE_OS" == "darwin" ]]; then
+    DATA_WORKER_COUNT=$(nproc)
+fi
 PARENT_PID=$$
 
 # Some variables for paths and binaries
 QUIL_NODE_PATH=$HOME/ceremonyclient/node
-NODE_BINARY=node-2.0.4.2-darwin-arm64
+NODE_BINARY="node-2.0.4.2-$RELEASE_LINE"
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -51,6 +61,12 @@ fi
 
 # Get the maximum number of CPU cores
 MAX_CORES=$(sysctl -n hw.logicalcpu)
+
+if [[ "$RELEASE_OS" == "darwin" ]]; then
+    MAX_CORES=$(sysctl -n hw.logicalcpu)
+elif [[ "$RELEASE_OS" == "darwin" ]]; then
+    MAX_CORES=$(nproc)
+fi
 
 # Adjust DATA_WORKER_COUNT if START_CORE_INDEX is 1
 if [ "$START_CORE_INDEX" -eq 1 ]; then
