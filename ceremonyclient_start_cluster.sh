@@ -12,8 +12,8 @@ trap kill_process SIGINT
 
 
 
-RELEASE_ARCH=$(./ceremonyclient_env.sh -arch)
-RELEASE_OS=$(./ceremonyclient_env.sh -os)
+RELEASE_ARCH=$(./tools/ceremonyclient_env.sh -arch)
+RELEASE_OS=$(./tools/ceremonyclient_env.sh -os)
 RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
 
 START_CORE_INDEX=1

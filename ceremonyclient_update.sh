@@ -22,13 +22,13 @@ echo ""
 
 CLUSTER=0
 
-RELEASE_ARCH=$(./ceremonyclient_env.sh -arch)
-RELEASE_OS=$(./ceremonyclient_env.sh -os)
+RELEASE_ARCH=$(./tools/ceremonyclient_env.sh -arch)
+RELEASE_OS=$(./tools/ceremonyclient_env.sh -os)
 RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
 
-CEREMONYCLIENT_NODE_DIR=$(./ceremonyclient_env.sh -key "ceremonyclient_node_dir")
+CEREMONYCLIENT_NODE_DIR=$(./tools/ceremonyclient_env.sh -key "ceremonyclient_node_dir")
 
-LATEST_VERSIONS=$(./ceremonyclient_env.sh -latest-version 'files-quiet')
+LATEST_VERSIONS=$(./tools/ceremonyclient_env.sh -latest-version 'files-quiet')
 LATEST_NODE_INSTALLED=$(echo "$LATEST_VERSIONS" | sed '1q;d')
 LATEST_NODE_RELEASE=$(echo "$LATEST_VERSIONS" | sed '2q;d')
 LATEST_QCLIENT_INSTALLED=$(echo "$LATEST_VERSIONS" | sed '3q;d')
@@ -37,7 +37,7 @@ LATEST_QCLIENT_RELEASE=$(echo "$LATEST_VERSIONS" | sed '4q;d')
 FETCH_FILES_func() {
     local FILE_PATTERN="$1"
     local TYPE="$(echo $FILE_PATTERN | awk -F'-' '{print $1}')_release_url"
-    local URL=$(./ceremonyclient_env.sh -key $TYPE)
+    local URL=$(./tools/ceremonyclient_env.sh -key $TYPE)
 
     # List files in most recent release
     RELEASE_FILES_AVAILABLE=$(curl -s -S $URL | grep $FILE_PATTERN)
@@ -93,9 +93,9 @@ CHECK_FILESIZES_func() {
 }
 
 CONFIRM_NEW_BINARIES_func() {
-    NEW_LATEST_NODE_FILE_INSTALLED_PATH=$(./ceremonyclient_env.sh -latest-version 'node-installed-files-quiet')
+    NEW_LATEST_NODE_FILE_INSTALLED_PATH=$(./tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet')
     NEW_LATEST_NODE_FILE_INSTALLED_FILENAME=$(echo "$NEW_LATEST_NODE_FILE_INSTALLED_PATH" | awk -F'/' '{print $NF}' | xargs)
-    NEW_LATEST_QCLIENT_FILE_INSTALLED_PATH=$(./ceremonyclient_env.sh -latest-version 'qclient-installed-files-quiet')
+    NEW_LATEST_QCLIENT_FILE_INSTALLED_PATH=$(./tools/ceremonyclient_env.sh -latest-version 'qclient-installed-files-quiet')
     NEW_LATEST_QCLIENT_FILE_INSTALLED_FILENAME=$(echo "$NEW_LATEST_QCLIENT_FILE_INSTALLED_PATH" | awk -F'/' '{print $NF}' | xargs)
 
     NEW_LATEST_NODE_FILES=$(find "$CEREMONYCLIENT_NODE_DIR" -type f -name "$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME*")
