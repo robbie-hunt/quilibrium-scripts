@@ -18,8 +18,6 @@ USAGE_func() {
     exit 0
 }
 
-echo ""
-
 CLUSTER=0
 
 RELEASE_ARCH=$(./tools/ceremonyclient_env.sh -arch)
@@ -173,11 +171,15 @@ while getopts "xhc" opt; do
 done
 shift $((OPTIND -1))
 
+echo ""
+
 COMPARE_VERSIONS_func "$LATEST_NODE_INSTALLED" "$LATEST_NODE_RELEASE"
 COMPARE_VERSIONS_func "$LATEST_QCLIENT_INSTALLED" "$LATEST_QCLIENT_RELEASE"
 
 CONFIRM_NEW_BINARIES_func
 
 ALTER_RELOAD_RESTART_DAEMONS_func
+
+echo ""
 
 exit 0
