@@ -13,11 +13,11 @@ USAGE_func() {
     echo ""
     echo "       -h                               Display this help dialogue."
     echo "       -x                               For debugging the script; sets the x shell builtin, 'set -x'."
-    echo "       -env-init                        Initialise the .localenv file."
-    echo "       -env -update                     Update the .localenv file."
+    echo "       -env-init                        Initialise the "$LOCALENV" file."
+    echo "       -env -update                     Update the "$LOCALENV" file."
     echo "       -arch                            Print the CPU architecture."
     echo "       -os                              Print the system OS."
-    echo "       -key                             Check the .localenv for a key and print the corresponding value."
+    echo "       -key                             Check the "$LOCALENV" for a key and print the corresponding value."
     echo "       -latest-version                  Print the latest versions of node & qclient binaries."
     echo "                                        Provide a string to thin down results: 'node|qclient|'-'installed|release|'-'files|'-'quiet|'."
     echo "                                        Provide no string to get all options."
@@ -25,9 +25,7 @@ USAGE_func() {
     exit 0
 }
 
-# Initialise the variables used in this script as zero/empty variables
-CHECK_OS=""
-CHECK_ARCH=""
+LOCALENV="../.localenv"
 
 CHECK_ARCH_func() {
     RELEASE_ARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
@@ -62,17 +60,17 @@ RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
 
 PRINT_LOCAL_ENV_KEY_VALUE_func() {
     # Check if the file exists
-    if [[ ! -f .localenv ]]; then
-        echo "Error: .localenv does not exist."
+    if [[ ! -f "$LOCALENV" ]]; then
+        echo "Error: "$LOCALENV" does not exist."
         return 1
     fi
 
     # Use grep to find the line and awk to extract the value
-    local VALUE=$(grep "^$1=" .localenv | awk -F'=' '{print $2}')
+    local VALUE=$(grep "^$1=" "$LOCALENV" | awk -F'=' '{print $2}')
 
     # Check if the key exists in the file
-    if [[ -z "$VALUE" && $(grep -c "^$1=" .localenv) -eq 0 ]]; then
-        echo "Error: Key '$1' not found in .localenv."
+    if [[ -z "$VALUE" && $(grep -c "^$1=" "$LOCALENV") -eq 0 ]]; then
+        echo "Error: Key '$1' not found in "$LOCALENV"."
         return 1
     fi
 
@@ -81,13 +79,13 @@ PRINT_LOCAL_ENV_KEY_VALUE_func() {
 }
 
 INITIALISE_LOCAL_ENV_func() {
-    if [[ -f .localenv && -s .localenv ]]; then
-        echo ".localenv file already exists, contents printed below:"
-        cat .localenv
+    if [[ -f "$LOCALENV" && -s "$LOCALENV" ]]; then
+        echo ""$LOCALENV" file already exists, contents printed below:"
+        cat "$LOCALENV"
         return 1
     else
-        touch .localenv
-        sudo tee .localenv > /dev/null <<EOF
+        touch "$LOCALENV"
+        sudo tee "$LOCALENV" > /dev/null <<EOF
 ceremonyclient_root_dir=
 ceremonyclient_node_dir=
 ceremonyclient_config=
@@ -113,7 +111,7 @@ LATEST_INSTALLED_VERSIONS_func() {
     sort -t. -k1,1nr -k2,2nr -k3,3nr -k4,4nr | \
     # Take the first line (highest version)
     head -n 1 | \
-    if [[ $FILES_REQUESTED = FALSE ]]; then awk -F' ' '{print $1}'; else awk -F' ' '{print $2}'; fi
+    if [[ $FILES_REQUESTED = 0 ]]; then awk -F' ' '{print $1}'; else awk -F' ' '{print $2}'; fi
 }
 
 LATEST_RELEASE_VERSIONS_func() {
@@ -128,40 +126,40 @@ LATEST_RELEASE_VERSIONS_func() {
     sort -t. -k1,1nr -k2,2nr -k3,3nr -k4,4nr | \
     # Take the first line (highest version)
     head -n 1 | \
-    if [[ $FILES_REQUESTED = FALSE ]]; then awk -F' ' '{print $1}'; else awk -F' ' '{print $2}'; fi
+    if [[ $FILES_REQUESTED = 0 ]]; then awk -F' ' '{print $1}'; else awk -F' ' '{print $2}'; fi
 }
 
 LATEST_VERSIONS_func() {
     # Initialise options and their corresponding checkers
     local OPTIONS="${1:-}"
-    local NODE_REQUESTED=FALSE
-    local QCLIENT_REQUESTED=FALSE
-    local INSTALLED_REQUESTED=FALSE
-    local RELEASE_REQUESTED=FALSE
-    local FILES_REQUESTED=FALSE
-    local QUIET=FALSE
+    local NODE_REQUESTED=0
+    local QCLIENT_REQUESTED=0
+    local INSTALLED_REQUESTED=0
+    local RELEASE_REQUESTED=0
+    local FILES_REQUESTED=0
+    local QUIET=0
 
     # Check if no option is provided (i.e., show both node and qclient info)
     if [[ -z "$OPTIONS" ]]; then
-        NODE_REQUESTED=TRUE
-        QCLIENT_REQUESTED=TRUE
-        INSTALLED_REQUESTED=TRUE
-        RELEASE_REQUESTED=TRUE
-        FILES_REQUESTED=FALSE
-        QUIET=FALSE
+        NODE_REQUESTED=1
+        QCLIENT_REQUESTED=1
+        INSTALLED_REQUESTED=1
+        RELEASE_REQUESTED=1
+        FILES_REQUESTED=0
+        QUIET=0
     else
         # Check for presence of 'node' or 'qclient' in the options
-        if [[ ! "$OPTIONS" =~ "node" && ! "$OPTIONS" =~ "qclient" ]]; then NODE_REQUESTED=TRUE && QCLIENT_REQUESTED=TRUE; fi
-        if [[ "$OPTIONS" =~ "node" ]]; then NODE_REQUESTED=TRUE; fi
-        if [[ "$OPTIONS" =~ "qclient" ]]; then QCLIENT_REQUESTED=TRUE; fi
+        if [[ ! "$OPTIONS" =~ "node" && ! "$OPTIONS" =~ "qclient" ]]; then NODE_REQUESTED=1 && QCLIENT_REQUESTED=1; fi
+        if [[ "$OPTIONS" =~ "node" ]]; then NODE_REQUESTED=1; fi
+        if [[ "$OPTIONS" =~ "qclient" ]]; then QCLIENT_REQUESTED=1; fi
         # Check for presence of 'installed' or 'release' in the options
-        if [[ ! "$OPTIONS" =~ "installed" && ! "$OPTIONS" =~ "release" ]]; then INSTALLED_REQUESTED=TRUE && RELEASE_REQUESTED=TRUE; fi
-        if [[ "$OPTIONS" =~ "installed" ]]; then INSTALLED_REQUESTED=TRUE; fi
-        if [[ "$OPTIONS" =~ "release" ]]; then RELEASE_REQUESTED=TRUE; fi
+        if [[ ! "$OPTIONS" =~ "installed" && ! "$OPTIONS" =~ "release" ]]; then INSTALLED_REQUESTED=1 && RELEASE_REQUESTED=1; fi
+        if [[ "$OPTIONS" =~ "installed" ]]; then INSTALLED_REQUESTED=1; fi
+        if [[ "$OPTIONS" =~ "release" ]]; then RELEASE_REQUESTED=1; fi
         # Check for presence of 'files' in the options
-        if [[ "$OPTIONS" =~ "files" ]]; then FILES_REQUESTED=TRUE; fi
+        if [[ "$OPTIONS" =~ "files" ]]; then FILES_REQUESTED=1; fi
         # Check for presence of 'quiet' in the options
-        if [[ "$OPTIONS" =~ "quiet" ]]; then QUIET=TRUE; fi
+        if [[ "$OPTIONS" =~ "quiet" ]]; then QUIET=1; fi
     fi
 
     local NODE_RELEASE_URL="https://releases.quilibrium.com/release"
@@ -170,46 +168,46 @@ LATEST_VERSIONS_func() {
     local LATEST_NODE_FILES_RELEASE=$(curl -s -S $NODE_RELEASE_URL | grep $RELEASE_OS-$RELEASE_ARCH)
     local LATEST_QCLIENT_FILES_RELEASE=$(curl -s -S $QCLIENT_RELEASE_URL | grep $RELEASE_OS-$RELEASE_ARCH)
 
-    if [[ $FILES_REQUESTED = TRUE ]]; then
+    if [[ $FILES_REQUESTED = 1 ]]; then
         local FILES_TEXT="files"
     else
         local FILES_TEXT="version"
     fi
 
-    if [[ $NODE_REQUESTED = TRUE ]]; then
+    if [[ $NODE_REQUESTED = 1 ]]; then
         local TYPE='node'
 
-        if [[ $INSTALLED_REQUESTED = TRUE ]]; then
+        if [[ $INSTALLED_REQUESTED = 1 ]]; then
             local SOURCE='installed'
-            if [[ $QUIET = TRUE ]]; then
+            if [[ $QUIET = 1 ]]; then
                 LATEST_INSTALLED_VERSIONS_func "$TYPE"
             else
                 echo "Latest $TYPE $FILES_TEXT ($SOURCE): $(LATEST_INSTALLED_VERSIONS_func "$TYPE")"
             fi
         fi
-        if [[ $RELEASE_REQUESTED = TRUE ]]; then
+        if [[ $RELEASE_REQUESTED = 1 ]]; then
             local SOURCE='release'
-            if [[ $QUIET = TRUE ]]; then
+            if [[ $QUIET = 1 ]]; then
                 LATEST_RELEASE_VERSIONS_func "$TYPE" $NODE_RELEASE_URL
             else
                 echo "Latest $TYPE $FILES_TEXT ($SOURCE): $(LATEST_RELEASE_VERSIONS_func "$TYPE" $NODE_RELEASE_URL)"
             fi
         fi
     fi
-    if [[ $QCLIENT_REQUESTED = TRUE ]]; then
+    if [[ $QCLIENT_REQUESTED = 1 ]]; then
         local TYPE='qclient'
 
-        if [[ $INSTALLED_REQUESTED = TRUE ]]; then
+        if [[ $INSTALLED_REQUESTED = 1 ]]; then
             local SOURCE='installed'
-            if [[ $QUIET = TRUE ]]; then
+            if [[ $QUIET = 1 ]]; then
                 LATEST_INSTALLED_VERSIONS_func "$TYPE"
             else
                 echo "Latest $TYPE $FILES_TEXT ($SOURCE): $(LATEST_INSTALLED_VERSIONS_func "$TYPE")"
             fi
         fi
-        if [[ $RELEASE_REQUESTED = TRUE ]]; then
+        if [[ $RELEASE_REQUESTED = 1 ]]; then
             local SOURCE='release'
-            if [[ $QUIET = TRUE ]]; then
+            if [[ $QUIET = 1 ]]; then
                 LATEST_RELEASE_VERSIONS_func "$TYPE" $QCLIENT_RELEASE_URL
             else
                 echo "Latest $TYPE $FILES_TEXT ($SOURCE): $(LATEST_RELEASE_VERSIONS_func "$TYPE" $QCLIENT_RELEASE_URL)"
@@ -220,7 +218,7 @@ LATEST_VERSIONS_func() {
 
 
 
-while TRUE; do
+while :; do
     case "$1" in
         -x) set -x;;
         -h) USAGE_func;;
