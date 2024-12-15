@@ -18,7 +18,7 @@ USAGE_func() {
     echo "       -arch                            Print the CPU architecture."
     echo "       -os                              Print the system OS."
     echo "       -key                             Check the .localenv for a key and print the corresponding value."
-    echo "       -latest-version                 Print the latest versions of node & qclient binaries."
+    echo "       -latest-version                  Print the latest versions of node & qclient binaries."
     echo "                                        Provide a string to thin down results: 'node|qclient|'-'installed|release|'-'files|'-'quiet|';"
     echo "                                        provide no string to get all options."
     echo ""
