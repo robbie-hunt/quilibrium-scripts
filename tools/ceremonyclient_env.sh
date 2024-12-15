@@ -19,8 +19,8 @@ USAGE_func() {
     echo "       -os                              Print the system OS."
     echo "       -key                             Check the .localenv for a key and print the corresponding value."
     echo "       -latest-version                  Print the latest versions of node & qclient binaries."
-    echo "                                        Provide a string to thin down results: 'node|qclient|'-'installed|release|'-'files|'-'quiet|';"
-    echo "                                        provide no string to get all options."
+    echo "                                        Provide a string to thin down results: 'node|qclient|'-'installed|release|'-'files|'-'quiet|'."
+    echo "                                        Provide no string to get all options."
     echo ""
     exit 0
 }
@@ -142,13 +142,13 @@ LATEST_VERSIONS_func() {
     local QUIET=FALSE
 
     # Check if no option is provided (i.e., show both node and qclient info)
-    if [[ -z "$OPTIONS" || "$OPTIONS" == 'quiet' ]]; then
+    if [[ -z "$OPTIONS" ]]; then
         NODE_REQUESTED=TRUE
         QCLIENT_REQUESTED=TRUE
         INSTALLED_REQUESTED=TRUE
         RELEASE_REQUESTED=TRUE
         FILES_REQUESTED=FALSE
-        QUIET=TRUE
+        QUIET=FALSE
     else
         # Check for presence of 'node' or 'qclient' in the options
         if [[ ! "$OPTIONS" =~ "node" && ! "$OPTIONS" =~ "qclient" ]]; then NODE_REQUESTED=TRUE && QCLIENT_REQUESTED=TRUE; fi
