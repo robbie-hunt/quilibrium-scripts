@@ -25,11 +25,22 @@ USAGE_func() {
     exit 0
 }
 
-LOCALENV="../.localenv"
+# Figure out what directory I'm in
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$SCRIPT_DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+SCRIPT_ROOT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print}' | sed 's/\/*$//')
+
+LOCALENV="$SCRIPT_ROOT_DIR/.localenv"
 
 CHECK_ARCH_func() {
     RELEASE_ARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
-    if [[ "$RELEASE_ARCH" = "x86_64" ]]; then
+    if [[ "$RELEASE_ARCH" = "x86_64" || "$RELEASE_ARCH" == "amd64" ]]; then
+        RELEASE_ARCH="amd64"
         echo "$RELEASE_ARCH"
     elif [[ "$RELEASE_ARCH" = "aarch64" || "$RELEASE_ARCH" = "arm64" ]]; then
         RELEASE_ARCH="arm64"
@@ -60,17 +71,19 @@ RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
 
 PRINT_LOCAL_ENV_KEY_VALUE_func() {
     # Check if the file exists
-    if [[ ! -f "$LOCALENV" ]]; then
-        echo "Error: "$LOCALENV" does not exist."
+    if [[ -f "$LOCALENV" ]]; then
+        :
+    else
+        echo "Error: $LOCALENV does not exist."
         return 1
     fi
 
     # Use grep to find the line and awk to extract the value
-    local VALUE=$(grep "^$1=" "$LOCALENV" | awk -F'=' '{print $2}')
+    local VALUE=$(grep "^$1=" $LOCALENV | awk -F'=' '{print $2}')
 
     # Check if the key exists in the file
-    if [[ -z "$VALUE" && $(grep -c "^$1=" "$LOCALENV") -eq 0 ]]; then
-        echo "Error: Key '$1' not found in "$LOCALENV"."
+    if [[ -z "$VALUE" && $(grep -c "^$1=" $LOCALENV) -eq 0 ]]; then
+        echo "Error: Key '$1' not found in $LOCALENV."
         return 1
     fi
 
@@ -80,7 +93,7 @@ PRINT_LOCAL_ENV_KEY_VALUE_func() {
 
 INITIALISE_LOCAL_ENV_func() {
     if [[ -f "$LOCALENV" && -s "$LOCALENV" ]]; then
-        echo ""$LOCALENV" file already exists, contents printed below:"
+        echo "$LOCALENV file already exists, contents printed below:"
         cat "$LOCALENV"
         return 1
     else
