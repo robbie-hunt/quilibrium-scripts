@@ -14,9 +14,10 @@ USAGE_func() {
     echo "       -h                               Display this help dialogue."
     echo "       -x                               For debugging the script; sets the x shell builtin, 'set -x'."
     echo "       -env-init                        Initialise the .localenv file."
-    echo "       -env -update                     Update the .localenv file."
+    echo "       -env-update                      Update the .localenv file."
     echo "       -arch                            Print the CPU architecture."
     echo "       -os                              Print the system OS."
+    echo "       -release-line                    Print the CPU architecture and system OS in the format 'os-arch'."
     echo "       -key                             Check the .localenv for a key and print the corresponding value."
     echo "       -latest-version                  Print the latest versions of node & qclient binaries."
     echo "                                        Provide a string to thin down results: 'node|qclient|'-'installed|release|'-'files|'-'quiet|'."
@@ -37,7 +38,7 @@ SCRIPT_ROOT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print}'
 
 LOCALENV="$SCRIPT_ROOT_DIR/.localenv"
 
-CHECK_ARCH_func() {
+PRINT_ARCH_func() {
     RELEASE_ARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
     if [[ "$RELEASE_ARCH" = "x86_64" || "$RELEASE_ARCH" == "amd64" ]]; then
         RELEASE_ARCH="amd64"
@@ -52,7 +53,7 @@ CHECK_ARCH_func() {
     fi
 }
 
-CHECK_OS_func() {
+PRINT_OS_func() {
     RELEASE_OS=$(uname -s | tr '[:upper:]' '[:lower:]')
     if [[ "$RELEASE_OS" = "linux" ]]; then
         echo "$RELEASE_OS"
@@ -65,9 +66,14 @@ CHECK_OS_func() {
     fi
 }
 
-RELEASE_OS=$(CHECK_OS_func)
-RELEASE_ARCH=$(CHECK_ARCH_func)
-RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
+RELEASE_OS=$(PRINT_OS_func)
+RELEASE_ARCH=$(PRINT_ARCH_func)
+
+PRINT_RELEASE_LINE_func() {
+    echo "$RELEASE_OS-$RELEASE_ARCH"
+}
+
+RELEASE_LINE=$(PRINT_RELEASE_LINE_func)
 
 PRINT_LOCAL_ENV_KEY_VALUE_func() {
     # Check if the file exists
@@ -237,8 +243,9 @@ while :; do
         -h) USAGE_func;;
         -env-init) INITIALISE_LOCAL_ENV_func;;
         -env-update) UPDATE_LOCAL_ENV_func;;
-        -arch) CHECK_ARCH_func;;
-        -os) CHECK_OS_func;;
+        -arch) PRINT_ARCH_func;;
+        -os) PRINT_OS_func;;
+        -release-line) PRINT_RELEASE_LINE_func;;
         -key) PRINT_LOCAL_ENV_KEY_VALUE_func "$2";;
         -latest-version) LATEST_VERSIONS_func "${2:-}";;
         *) USAGE_func;;
