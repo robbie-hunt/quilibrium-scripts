@@ -18,6 +18,7 @@ USAGE_func() {
     exit 0
 }
 
+QUIET=0
 CLUSTER=0
 
 RELEASE_ARCH=$(./tools/ceremonyclient_env.sh -arch)
@@ -73,18 +74,29 @@ CHECK_FILESIZES_func() {
         if [[ "$FILE" =~ ".dgst" ]]; then
             # Check that the .dgst and .sg files are above 100 bytes
             if [[ -n $(find "$FILE" -prune -size +100c) ]]; then
-                chmod +x "$FILE"
+                if [[ "$QUIET" == 1 ]]; then
+                    :
+                else
+                    echo "$FILE downloaded."
+                fi
             else
                 echo "Error: file '$FILE' has size of '$(du -h "$FILE")'."
                 echo "Check manually to make sure this file downloaded correctly before using it."
+                return 1
             fi
         else
             # Check that the main node/qclient binary ar above 180MB
             if [[ -n $(find "$FILE" -prune -size +180000000c) ]]; then
                 chmod +x "$FILE"
+                if [[ "$QUIET" == 1 ]]; then
+                    :
+                else
+                    echo "$FILE downloaded and made executible."
+                fi
             else
                 echo "Error: file '$FILE' has size of '$(du -h "$FILE")'."
                 echo "Check manually to make sure this file downloaded correctly before using it."
+                return 1
             fi
         fi
     done
@@ -161,10 +173,11 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
 
 
 
-while getopts "xhc" opt; do
+while getopts "xhqc" opt; do
     case "$opt" in
         x) set -x;;
         h) USAGE_func; exit 0;;
+        q) QUIET=1;;
         c) CLUSTER=1;;
         *) USAGE_func; exit 0;;
     esac

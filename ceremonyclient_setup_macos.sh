@@ -6,16 +6,11 @@ set -eou pipefail
 
 ### DETERMINATIONS & VARIABLES
 
-# Define the home dierctory
 HOME=$(eval echo ~$USER)
+CEREMONYCLIENT_NODE_DIR=$(./tools/ceremonyclient_env.sh -key "ceremonyclient_node_dir")
+CEREMONYCLIENT_LOGFILE="$HOME/ceremonyclient.log"
 
-# Define the logfile
-CEREMONYCLIENT_LOGFILE=$HOME/ceremonyclient.log
-
-# Label for plist
 PLIST_LABEL="local.ceremonyclient"
-
-# Path for the plist launchctl file
 PLIST_FILE=/Library/LaunchDaemons/$PLIST_LABEL.plist
 
 GO_VERSION=$(go version | awk '{print $3}')
@@ -32,6 +27,30 @@ sleep 3
 
 
 
+FETCH_FILES_func() {
+    local FILE_PATTERN="$1"
+    local TYPE="$(echo $FILE_PATTERN | awk -F'-' '{print $1}')_release_url"
+    local URL=$(./tools/ceremonyclient_env.sh -key $TYPE)
+
+    # List files in most recent release
+    RELEASE_FILES_AVAILABLE=$(curl -s -S $URL | grep $FILE_PATTERN)
+
+    if [[ -z "$RELEASE_FILES_AVAILABLE" ]]; then
+        echo "Error: no release files relating to $FILE_PATTERN could be found."
+        echo "This could be due to network issues."
+        exit 1
+    fi
+
+    for RELEASE_FILE in $RELEASE_FILES_AVAILABLE; do
+        if curl -s -S "https://releases.quilibrium.com/$RELEASE_FILE" > "$CEREMONYCLIENT_NODE_DIR/$RELEASE_FILE"; then
+            echo "Downloaded and installed file: $RELEASE_FILE."
+        fi
+    done
+}
+
+
+
+
 ### NODE BINARY DOWNLOAD
 
 # Set up environment variables (redundant but solves the command go not found error)
@@ -44,23 +63,23 @@ mkdir -p ~/ceremonyclient/node
 cd ~/ceremonyclient/node
 
 # List files in most recent release
-nodefiles=$(curl -s -S https://releases.quilibrium.com/release | grep $RELEASE_LINE)
-if [[ -z "$nodefiles" ]]; then
+NODE_RELEASE_FILES=$(curl -s -S https://releases.quilibrium.com/release | grep $RELEASE_LINE)
+if [[ -z "$NODE_RELEASE_FILES" ]]; then
     echo "Error: No node files found for $RELEASE_LINE"
     echo "This could be due to network issues or no releases for your architecture."
     exit 1
 fi
 
 # For each file in most recent release, download it
-for nodefile in $nodefiles; do
-    version=$(echo "$nodefile" | cut -d '-' -f 2)
-    if curl -s -S "https://releases.quilibrium.com/$nodefile" > "$nodefile"; then
+for NODE_FILE in $NODE_RELEASE_FILES; do
+    version=$(echo "$NODE_FILE" | cut -d '-' -f 2)
+    if curl -s -S "https://releases.quilibrium.com/$NODE_FILE" > "$NODE_FILE"; then
         :
     fi
 done
 
 # Make node binary executable
-latest_node_file=$(echo "$nodefiles" | grep "$RELEASE_LINE"$)
+latest_node_file=$(echo "$NODE_RELEASE_FILES" | grep "$RELEASE_LINE"$)
 chmod +x $latest_node_file
 
 sleep 3
