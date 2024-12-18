@@ -24,9 +24,7 @@ QUIET=0
 CEREMONYCLIENT_NODE_DIR=$(./ceremonyclient_env.sh -key "ceremonyclient_node_dir")
 
 FETCH_FILES_func() {
-    RELEASE_FILES_AVAILABLE=$(curl -s -S "$URL" | grep "$FILE_PATTERN" || true)
-
-    if [[ -z "$RELEASE_FILES_AVAILABLE" ]]; then
+    if [[ ! $(curl -s -S "$URL" | grep -s "$FILE_PATTERN") ]]; then
         if [[ "$QUIET" == 1 ]]; then
             return 1
         else
@@ -35,6 +33,8 @@ FETCH_FILES_func() {
             return 1
         fi
     fi
+
+    RELEASE_FILES_AVAILABLE=$(curl -s -S "$URL" | grep "$FILE_PATTERN")
 
     for RELEASE_FILE in $RELEASE_FILES_AVAILABLE; do
         if curl -s -S "https://releases.quilibrium.com/$RELEASE_FILE" > "$CEREMONYCLIENT_NODE_DIR/$RELEASE_FILE"; then
