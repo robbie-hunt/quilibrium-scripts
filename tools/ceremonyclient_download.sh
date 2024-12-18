@@ -21,36 +21,17 @@ USAGE_func() {
 
 QUIET=0
 
-RELEASE_ARCH=$(./ceremonyclient_env.sh -arch)
-RELEASE_OS=$(./ceremonyclient_env.sh -os)
-RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
-
 CEREMONYCLIENT_NODE_DIR=$(./ceremonyclient_env.sh -key "ceremonyclient_node_dir")
 
-LATEST_VERSIONS=$(./ceremonyclient_env.sh -latest-version 'files-quiet')
-LATEST_NODE_INSTALLED=$(echo "$LATEST_VERSIONS" | sed '1q;d')
-LATEST_NODE_RELEASE=$(echo "$LATEST_VERSIONS" | sed '2q;d')
-LATEST_QCLIENT_INSTALLED=$(echo "$LATEST_VERSIONS" | sed '3q;d')
-LATEST_QCLIENT_RELEASE=$(echo "$LATEST_VERSIONS" | sed '4q;d')
-
-# Download the files
-# Check the filesizes of downloaded files
-# Confirm the downloaded binary matches the latest version
-
 FETCH_FILES_func() {
-    local FILE_PATTERN="$1"
-    local TYPE="$(echo $FILE_PATTERN | awk -F'-' '{print $1}')_release_url"
-    local URL=$(./ceremonyclient_env.sh -key $TYPE)
-
-    # List files in most recent release
-    RELEASE_FILES_AVAILABLE=$(curl -s -S $URL | grep $FILE_PATTERN)
+    RELEASE_FILES_AVAILABLE=$(curl -s -S "$URL" | grep "$FILE_PATTERN" || true)
 
     if [[ -z "$RELEASE_FILES_AVAILABLE" ]]; then
         if [[ "$QUIET" == 1 ]]; then
             return 1
         else
             echo "Error: no release files relating to $FILE_PATTERN could be found."
-            echo "This could be due to network issues."
+            echo "This could be due to network issues, a bad spelling provided to -f, or trouble connecting to $URL."
             return 1
         fi
     fi
@@ -60,7 +41,7 @@ FETCH_FILES_func() {
             if [[ "$QUIET" == 1 ]]; then
                 :
             else
-                echo "Downloaded and installed file: $RELEASE_FILE."
+                echo "Downloaded file $RELEASE_FILE"
             fi
         fi
     done
@@ -73,11 +54,7 @@ CHECK_FILESIZES_MAKE_EXECUTABLE_func() {
         if [[ "$FILE" =~ ".dgst" ]]; then
             # Check that the .dgst and .sg files are above 100 bytes
             if [[ -n $(find "$FILE" -prune -size +100c) ]]; then
-                if [[ "$QUIET" == 1 ]]; then
-                    :
-                else
-                    echo "$FILE downloaded."
-                fi
+                :
             else
                 if [[ "$QUIET" == 1 ]]; then
                     return 1
@@ -91,11 +68,6 @@ CHECK_FILESIZES_MAKE_EXECUTABLE_func() {
             # Check that the main node/qclient binary ar above 180MB
             if [[ -n $(find "$FILE" -prune -size +180000000c) ]]; then
                 chmod +x "$FILE"
-                if [[ "$QUIET" == 1 ]]; then
-                    :
-                else
-                    echo "$FILE downloaded and made executable."
-                fi
             else
                 if [[ "$QUIET" == 1 ]]; then
                     return 1
@@ -110,58 +82,55 @@ CHECK_FILESIZES_MAKE_EXECUTABLE_func() {
 }
 
 CONFIRM_NEW_BINARIES_func() {
-    NEW_LATEST_NODE_FILE_INSTALLED_PATH=$(./ceremonyclient_env.sh -latest-version 'node-installed-files-quiet')
-    NEW_LATEST_NODE_FILE_INSTALLED_FILENAME=$(echo "$NEW_LATEST_NODE_FILE_INSTALLED_PATH" | awk -F'/' '{print $NF}' | xargs)
-    NEW_LATEST_QCLIENT_FILE_INSTALLED_PATH=$(./ceremonyclient_env.sh -latest-version 'qclient-installed-files-quiet')
-    NEW_LATEST_QCLIENT_FILE_INSTALLED_FILENAME=$(echo "$NEW_LATEST_QCLIENT_FILE_INSTALLED_PATH" | awk -F'/' '{print $NF}' | xargs)
+    NEW_LATEST_FILE_INSTALLED_PATH=$(./ceremonyclient_env.sh -latest-version "$TYPE-installed-files-quiet")
+    NEW_LATEST_FILE_INSTALLED_FILENAME=$(echo "$NEW_LATEST_FILE_INSTALLED_PATH" | awk -F'/' '{print $NF}' | xargs)
+    NEW_LATEST_FILES=$(find "$CEREMONYCLIENT_NODE_DIR" -type f -name "$NEW_LATEST_FILE_INSTALLED_FILENAME*")
 
-    NEW_LATEST_NODE_FILES=$(find "$CEREMONYCLIENT_NODE_DIR" -type f -name "$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME*")
-    NEW_LATEST_QCLIENT_FILES=$(find "$CEREMONYCLIENT_NODE_DIR" -type f -name "$NEW_LATEST_QCLIENT_FILE_INSTALLED_FILENAME*")
-
-    if [[ "$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME" == "$LATEST_NODE_RELEASE" ]]; then
-        if [[ $(CHECK_FILESIZES_MAKE_EXECUTABLE_func "$NEW_LATEST_NODE_FILES") ]]; then
-            return 0
-        else
+    if [[ "$NEW_LATEST_FILE_INSTALLED_FILENAME" == "$LATEST_VERSION_RELEASED" ]]; then
+        if CHECK_FILESIZES_MAKE_EXECUTABLE_func "$NEW_LATEST_FILES"; then
             if [[ "$QUIET" == 1 ]]; then
-                return 1
+                :
             else
-                echo "Error: CHECK_FILESIZES_MAKE_EXECUTABLE_func function failed."
-                echo "Manually check the file sizes in $CEREMONYCLIENT_NODE_DIR of the files downloaded below:"
-                echo "$NEW_LATEST_NODE_FILES"
-                return 1
+                echo "${TYPE^} binaries installed successfully."
             fi
-        fi
-    fi
-    if [[ "$NEW_LATEST_QCLIENT_FILE_INSTALLED_FILENAME" == "$LATEST_QCLIENT_RELEASE" ]]; then
-        if [[ $(CHECK_FILESIZES_MAKE_EXECUTABLE_func "$NEW_LATEST_QCLIENT_FILES") ]]; then
-            return 0
         else
             if [[ "$QUIET" == 1 ]]; then
                 return 1
             else
                 echo "Error: CHECK_FILESIZES_MAKE_EXECUTABLE_func function failed."
                 echo "Manually check the file sizes in $CEREMONYCLIENT_NODE_DIR of the files downloaded below:"
-                echo "$NEW_LATEST_QCLIENT_FILES"
+                echo "$NEW_LATEST_FILES"
                 return 1
             fi
         fi
     fi
 }
 
+DOWNLOAD_AND_CONFIRM_func() {
+    FETCH_FILES_func "$1"
+    CONFIRM_NEW_BINARIES_func
+}
 
 
-while getopts "xhqf" opt; do
+
+while getopts "xhqf:" opt; do
     case "$opt" in
         x) set -x;;
         h) USAGE_func; exit 0;;
         q) QUIET=1;;
-        f) DOWNLOAD_AND_CONFIRM_func "$OPTARG";;
+        f) FILE_PATTERN="$OPTARG";;
         *) USAGE_func; exit 0;;
     esac
 done
 shift $((OPTIND -1))
 
-FETCH_FILES_func "$1"
-CONFIRM_NEW_BINARIES_func
+TYPE=$(echo "$FILE_PATTERN" | awk -F'-' '{print $1}')
+TYPE_AS_KEY=$(echo $TYPE"_release_url")
+URL=$(./ceremonyclient_env.sh -key "$TYPE_AS_KEY")
+
+LATEST_VERSION_INSTALLED=$(./ceremonyclient_env.sh -latest-version "$TYPE-installed-files-quiet")
+LATEST_VERSION_RELEASED=$(./ceremonyclient_env.sh -latest-version "$TYPE-release-files-quiet")
+
+DOWNLOAD_AND_CONFIRM_func "$FILE_PATTERN"
 
 exit 0
