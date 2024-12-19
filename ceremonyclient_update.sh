@@ -14,24 +14,11 @@ USAGE_func() {
     echo "       -x    For debugging the script; sets the x shell builtin, 'set -x'."
     echo "       -c    This node is part of a cluster."
     echo "             (By default this is set to null, meaning this node is run as a standalone node.)"
+    echo "       -d    (Optional) Directory to update binaries in."
+    echo "             By default, the directory for updates is determined by the 'ceremonyclient_node_dir' key in .localenv."
     echo ""
     exit 0
 }
-
-QUIET=0
-CLUSTER=0
-
-RELEASE_ARCH=$(./tools/ceremonyclient_env.sh -arch)
-RELEASE_OS=$(./tools/ceremonyclient_env.sh -os)
-RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
-
-CEREMONYCLIENT_NODE_DIR=$(./tools/ceremonyclient_env.sh -key "ceremonyclient_node_dir")
-
-LATEST_VERSIONS=$(./tools/ceremonyclient_env.sh -latest-version 'files-quiet')
-LATEST_NODE_INSTALLED=$(echo "$LATEST_VERSIONS" | sed '1q;d')
-LATEST_NODE_RELEASE=$(echo "$LATEST_VERSIONS" | sed '2q;d')
-LATEST_QCLIENT_INSTALLED=$(echo "$LATEST_VERSIONS" | sed '3q;d')
-LATEST_QCLIENT_RELEASE=$(echo "$LATEST_VERSIONS" | sed '4q;d')
 
 COMPARE_VERSIONS_func() {
     local FILE_INSTALLED=$(echo "$1" | awk -F'/' '{print $NF}' | xargs)
@@ -101,26 +88,50 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
 
 
 
-while getopts "xhqc" opt; do
+while getopts "xhqcd:" opt; do
     case "$opt" in
         x) set -x;;
         h) USAGE_func; exit 0;;
         q) QUIET=1;;
         c) CLUSTER=1;;
+        d) DIRECTORY="$OPTARG";;
         *) USAGE_func; exit 0;;
     esac
 done
 shift $((OPTIND -1))
 
-echo ""
+# Set to 1 by using the -q flag; quietens unnecessary output
+QUIET=0
+
+# Set to 1 by using the -c flag; indicates that this node is running as part of a cluster
+# This simply means that when it comes to updating daemon/service files, this script will update the
+# ceremonyclient_start_cluster.sh script with the new node filename, and not the daemon/service file.
+CLUSTER=0
+
+# The OS of the machine running this script
+RELEASE_OS=$(./tools/ceremonyclient_env.sh -os)
+# The release line ('os-arch') of the machine running this script
+RELEASE_LINE=$(./tools/ceremonyclient_env.sh -release-line)
+
+# For the ceremonyclient node directory
+# If a directory was supplied via the -d option, use it
+# Otherwise, use the directory in the .localenv
+if [[ -z "$DIRECTORY" ]]; then
+    CEREMONYCLIENT_NODE_DIR=$(./ceremonyclient_env.sh -key "ceremonyclient_node_dir")
+else
+    CEREMONYCLIENT_NODE_DIR="$DIRECTORY"
+fi
+
+# Get the latest version of the main node and qclient binaries,
+# both installed and available in release
+LATEST_NODE_INSTALLED=$(./tools/ceremonyclient_env.sh -latest-version 'node-install-files-quiet')
+LATEST_NODE_RELEASE=$(./tools/ceremonyclient_env.sh -latest-version 'node-release-files-quiet')
+LATEST_QCLIENT_INSTALLED=$(./tools/ceremonyclient_env.sh -latest-version 'qclient-install-files-quiet')
+LATEST_QCLIENT_RELEASE=$(./tools/ceremonyclient_env.sh -latest-version 'node-release-files-quiet')
 
 COMPARE_VERSIONS_func "$LATEST_NODE_INSTALLED" "$LATEST_NODE_RELEASE"
 COMPARE_VERSIONS_func "$LATEST_QCLIENT_INSTALLED" "$LATEST_QCLIENT_RELEASE"
 
-#CONFIRM_NEW_BINARIES_func
-
 ALTER_RELOAD_RESTART_DAEMONS_func
-
-echo ""
 
 exit 0
