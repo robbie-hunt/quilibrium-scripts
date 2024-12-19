@@ -4,26 +4,67 @@
 set -eou pipefail
 #set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
 
-### DETERMINATIONS & VARIABLES
+USAGE_func() {
+    echo ""
+    echo "Sets up a Quilibrium node on this machine."
+    echo ""
+    echo "USAGE: bash ceremonyclient_setup.sh [-h] ] [-x] [-c]"
+    echo ""
+    echo "       -h    Display this help dialogue."
+    echo "       -x    For debugging the script; sets the x shell builtin, 'set -x'."
+    echo "       -c    (Optional) This node is part of a cluster."
+    echo "             (By default this is set to null, meaning this node is run as a standalone node.)"
+    echo "       -d    (Optional) Directory to update binaries in."
+    echo "             By default, the directory to install to is determined by the 'ceremonyclient_node_dir' key in .localenv."
+    echo ""
+    exit 0
+}
 
-HOME=$(eval echo ~$USER)
-CEREMONYCLIENT_NODE_DIR=$(./tools/ceremonyclient_env.sh -key "ceremonyclient_node_dir")
+# For the ceremonyclient node directory
+# If a directory was supplied via the -d option, use it
+# Otherwise, use the directory in the .localenv
+if [[ -z "$DIRECTORY" ]]; then
+    CEREMONYCLIENT_NODE_DIR=$(./ceremonyclient_env.sh -key "ceremonyclient_node_dir")
+else
+    CEREMONYCLIENT_NODE_DIR="$DIRECTORY"
+fi
+
+# (macOS only) The logfile that will be used for the ceremonyclient
 CEREMONYCLIENT_LOGFILE="$HOME/ceremonyclient.log"
 
+# Plist name and file
 PLIST_LABEL="local.ceremonyclient"
 PLIST_FILE=/Library/LaunchDaemons/$PLIST_LABEL.plist
 
-GO_VERSION=$(go version | awk '{print $3}')
+# Get the latest version numbers of the node and qclient binaries from release
 NODE_VERSION=$(./tools/ceremonyclient_env.sh -latest-version 'node-release-quiet')
 QCLIENT_VERSION=$(./tools/ceremonyclient_env.sh -latest-version 'qclient-release-quiet')
 
+# Get the latest version files of the node and qclient binaries from release
 NODE_BINARY=$(./tools/ceremonyclient_env.sh -latest-version 'node-release-files-quiet')
 QCLIENT_BINARY=$(./tools/ceremonyclient_env.sh -latest-version 'qclient-release-files-quiet')
 
+# Get the OS and CPU arch as a string in the format 'os-arch'
 RELEASE_LINE=$(./tools/ceremonyclient_env.sh -release-line)
 
-echo ""
-sleep 3
+
+
+# Install dependancies
+    # If macOS, install homebrew, then git gmp rsync rclone
+    # If Linux, git make build-essential libgmp-dev rsync rclone wget curl sudo
+# Install Go, Rust, gRPC
+# Set up bashrc/zshrc with Go and Rust
+# Download node binary, make it executable
+# Download qclient binary, make it executable
+# Build the service file, load it up
+    # If part of cluster, build service using start_cluster
+    # If macOS, launchctl with plutil test and log rotation
+    # If Linux, systemctl
+# Let run for 3 mins, print output of logs
+# Config tips & suggestions instructions
+# Config gRPC instructions
+# If cluster, config cluster instructions
+# Instructions on setting up backups
 
 
 
@@ -47,7 +88,6 @@ FETCH_FILES_func() {
         fi
     done
 }
-
 
 
 
