@@ -33,27 +33,6 @@ LATEST_NODE_RELEASE=$(echo "$LATEST_VERSIONS" | sed '2q;d')
 LATEST_QCLIENT_INSTALLED=$(echo "$LATEST_VERSIONS" | sed '3q;d')
 LATEST_QCLIENT_RELEASE=$(echo "$LATEST_VERSIONS" | sed '4q;d')
 
-FETCH_FILES_func() {
-    local FILE_PATTERN="$1"
-    local TYPE="$(echo $FILE_PATTERN | awk -F'-' '{print $1}')_release_url"
-    local URL=$(./tools/ceremonyclient_env.sh -key $TYPE)
-
-    # List files in most recent release
-    RELEASE_FILES_AVAILABLE=$(curl -s -S $URL | grep $FILE_PATTERN)
-
-    if [[ -z "$RELEASE_FILES_AVAILABLE" ]]; then
-        echo "Error: no release files relating to $FILE_PATTERN could be found."
-        echo "This could be due to network issues."
-        exit 1
-    fi
-
-    for RELEASE_FILE in $RELEASE_FILES_AVAILABLE; do
-        if curl -s -S "https://releases.quilibrium.com/$RELEASE_FILE" > "$CEREMONYCLIENT_NODE_DIR/$RELEASE_FILE"; then
-            echo "Downloaded and installed file: $RELEASE_FILE."
-        fi
-    done
-}
-
 COMPARE_VERSIONS_func() {
     local FILE_INSTALLED=$(echo "$1" | awk -F'/' '{print $NF}' | xargs)
     local FILE_INSTALLED_PATH="$1"
@@ -65,58 +44,6 @@ COMPARE_VERSIONS_func() {
         echo "Update required for $FILE_INSTALLED."
         #FETCH_FILES_func "$FILE_RELEASE"
         ./tools/ceremonyclient_download.sh -f "$FILE_RELEASE"
-    fi
-}
-
-CHECK_FILESIZES_func() {
-    local FILES_TO_CHECK="$1"
-
-    for FILE in $FILES_TO_CHECK; do
-        if [[ "$FILE" =~ ".dgst" ]]; then
-            # Check that the .dgst and .sg files are above 100 bytes
-            if [[ -n $(find "$FILE" -prune -size +100c) ]]; then
-                if [[ "$QUIET" == 1 ]]; then
-                    :
-                else
-                    echo "$FILE downloaded."
-                fi
-            else
-                echo "Error: file '$FILE' has size of '$(du -h "$FILE")'."
-                echo "Check manually to make sure this file downloaded correctly before using it."
-                return 1
-            fi
-        else
-            # Check that the main node/qclient binary ar above 180MB
-            if [[ -n $(find "$FILE" -prune -size +180000000c) ]]; then
-                chmod +x "$FILE"
-                if [[ "$QUIET" == 1 ]]; then
-                    :
-                else
-                    echo "$FILE downloaded and made executible."
-                fi
-            else
-                echo "Error: file '$FILE' has size of '$(du -h "$FILE")'."
-                echo "Check manually to make sure this file downloaded correctly before using it."
-                return 1
-            fi
-        fi
-    done
-}
-
-CONFIRM_NEW_BINARIES_func() {
-    NEW_LATEST_NODE_FILE_INSTALLED_PATH=$(./tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet')
-    NEW_LATEST_NODE_FILE_INSTALLED_FILENAME=$(echo "$NEW_LATEST_NODE_FILE_INSTALLED_PATH" | awk -F'/' '{print $NF}' | xargs)
-    NEW_LATEST_QCLIENT_FILE_INSTALLED_PATH=$(./tools/ceremonyclient_env.sh -latest-version 'qclient-installed-files-quiet')
-    NEW_LATEST_QCLIENT_FILE_INSTALLED_FILENAME=$(echo "$NEW_LATEST_QCLIENT_FILE_INSTALLED_PATH" | awk -F'/' '{print $NF}' | xargs)
-
-    NEW_LATEST_NODE_FILES=$(find "$CEREMONYCLIENT_NODE_DIR" -type f -name "$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME*")
-    NEW_LATEST_QCLIENT_FILES=$(find "$CEREMONYCLIENT_NODE_DIR" -type f -name "$NEW_LATEST_QCLIENT_FILE_INSTALLED_FILENAME*")
-
-    if [[ "$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME" == "$LATEST_NODE_RELEASE" ]]; then
-        CHECK_FILESIZES_func "$NEW_LATEST_NODE_FILES"
-    fi
-    if [[ "$NEW_LATEST_QCLIENT_FILE_INSTALLED_FILENAME" == "$LATEST_QCLIENT_RELEASE" ]]; then
-        CHECK_FILESIZES_func "$NEW_LATEST_QCLIENT_FILES"
     fi
 }
 
