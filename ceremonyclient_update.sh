@@ -63,7 +63,8 @@ COMPARE_VERSIONS_func() {
         echo "$FILE_INSTALLED file installed is the latest version, no need to update."
     else
         echo "Update required for $FILE_INSTALLED."
-        FETCH_FILES_func "$FILE_RELEASE"
+        #FETCH_FILES_func "$FILE_RELEASE"
+        ./tools/ceremonyclient_download.sh -f "$FILE_RELEASE"
     fi
 }
 
@@ -189,7 +190,7 @@ echo ""
 COMPARE_VERSIONS_func "$LATEST_NODE_INSTALLED" "$LATEST_NODE_RELEASE"
 COMPARE_VERSIONS_func "$LATEST_QCLIENT_INSTALLED" "$LATEST_QCLIENT_RELEASE"
 
-CONFIRM_NEW_BINARIES_func
+#CONFIRM_NEW_BINARIES_func
 
 ALTER_RELOAD_RESTART_DAEMONS_func
 
