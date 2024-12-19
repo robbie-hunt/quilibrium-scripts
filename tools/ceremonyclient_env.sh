@@ -36,8 +36,10 @@ done
 SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 SCRIPT_ROOT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print}' | sed 's/\/*$//')
 
+# .localenv file location
 LOCALENV="$SCRIPT_ROOT_DIR/.localenv"
 
+# Function to print CPU architecture
 PRINT_ARCH_func() {
     RELEASE_ARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
     if [[ "$RELEASE_ARCH" = "x86_64" || "$RELEASE_ARCH" == "amd64" ]]; then
@@ -53,6 +55,7 @@ PRINT_ARCH_func() {
     fi
 }
 
+# Function to print OS
 PRINT_OS_func() {
     RELEASE_OS=$(uname -s | tr '[:upper:]' '[:lower:]')
     if [[ "$RELEASE_OS" = "linux" ]]; then
@@ -69,6 +72,9 @@ PRINT_OS_func() {
 RELEASE_OS=$(PRINT_OS_func)
 RELEASE_ARCH=$(PRINT_ARCH_func)
 
+# Function to combine the OS and arch into a string, to help with filtering binaries
+# For example: 'linux-amd64', 'darwin-arm64'
+# I often need to get the OS and arch of the machine running scripts and combine them in this format to filter binaries
 PRINT_RELEASE_LINE_func() {
     echo "$RELEASE_OS-$RELEASE_ARCH"
 }
@@ -76,7 +82,7 @@ PRINT_RELEASE_LINE_func() {
 RELEASE_LINE=$(PRINT_RELEASE_LINE_func)
 
 PRINT_LOCAL_ENV_KEY_VALUE_func() {
-    # Check if the file exists
+    # Check if the .localenv file exists
     if [[ -f "$LOCALENV" ]]; then
         :
     else
@@ -97,6 +103,7 @@ PRINT_LOCAL_ENV_KEY_VALUE_func() {
     echo "$VALUE"
 }
 
+# Initialise the .localenv file, to be filled in manually
 INITIALISE_LOCAL_ENV_func() {
     if [[ -f "$LOCALENV" && -s "$LOCALENV" ]]; then
         echo "$LOCALENV file already exists, contents printed below:"
@@ -115,6 +122,7 @@ EOF
     fi
 }
 
+# Find the latest version of either the qclient or node binary that is installed
 LATEST_INSTALLED_VERSIONS_func() {
     local TYPE=$1
 
@@ -129,6 +137,7 @@ LATEST_INSTALLED_VERSIONS_func() {
     if [[ $FILES_REQUESTED = 0 ]]; then awk -F' ' '{print $1}'; else awk -F' ' '{print $2}'; fi
 }
 
+# Find the latest version of either the qclient or node binary that is available on quilibrium.com
 LATEST_RELEASE_VERSIONS_func() {
     local TYPE=$1
     local RELEASE_URL=$2
@@ -144,6 +153,8 @@ LATEST_RELEASE_VERSIONS_func() {
     if [[ $FILES_REQUESTED = 0 ]]; then awk -F' ' '{print $1}'; else awk -F' ' '{print $2}'; fi
 }
 
+# Master function to find the latest version of the requested files
+# Qclient/node binaries, installed or available online, print filenames or just versions, quieten unnecessary output
 LATEST_VERSIONS_func() {
     # Initialise options and their corresponding checkers
     local OPTIONS="${1:-}"
@@ -154,7 +165,7 @@ LATEST_VERSIONS_func() {
     local FILES_REQUESTED=0
     local QUIET=0
 
-    # Check if no option is provided (i.e., show both node and qclient info)
+    # If no option is provided, set these defaults
     if [[ -z "$OPTIONS" ]]; then
         NODE_REQUESTED=1
         QCLIENT_REQUESTED=1
@@ -180,9 +191,6 @@ LATEST_VERSIONS_func() {
     local NODE_RELEASE_URL="https://releases.quilibrium.com/release"
     local QCLIENT_RELEASE_URL="https://releases.quilibrium.com/qclient-release"
 
-    local LATEST_NODE_FILES_RELEASE=$(curl -s -S $NODE_RELEASE_URL | grep $RELEASE_OS-$RELEASE_ARCH)
-    local LATEST_QCLIENT_FILES_RELEASE=$(curl -s -S $QCLIENT_RELEASE_URL | grep $RELEASE_OS-$RELEASE_ARCH)
-
     if [[ $FILES_REQUESTED = 1 ]]; then
         local FILES_TEXT="files"
     else
@@ -190,8 +198,11 @@ LATEST_VERSIONS_func() {
     fi
 
     if [[ $NODE_REQUESTED = 1 ]]; then
+        # Get list of available node binaries from quilibrium.com
+        local LATEST_NODE_FILES_RELEASE=$(curl -s -S $NODE_RELEASE_URL | grep $RELEASE_OS-$RELEASE_ARCH)
         local TYPE='node'
 
+        # If the latest installed binaries are requested, then
         if [[ $INSTALLED_REQUESTED = 1 ]]; then
             local SOURCE='installed'
             if [[ $QUIET = 1 ]]; then
@@ -200,6 +211,7 @@ LATEST_VERSIONS_func() {
                 echo "Latest $TYPE $FILES_TEXT ($SOURCE): $(LATEST_INSTALLED_VERSIONS_func "$TYPE")"
             fi
         fi
+        # If the latest release binaries are requested, then
         if [[ $RELEASE_REQUESTED = 1 ]]; then
             local SOURCE='release'
             if [[ $QUIET = 1 ]]; then
@@ -210,8 +222,11 @@ LATEST_VERSIONS_func() {
         fi
     fi
     if [[ $QCLIENT_REQUESTED = 1 ]]; then
+        # Get list of available qclient binaries from quilibrium.com
+        local LATEST_QCLIENT_FILES_RELEASE=$(curl -s -S $QCLIENT_RELEASE_URL | grep $RELEASE_OS-$RELEASE_ARCH)
         local TYPE='qclient'
 
+        # If the latest installed binaries are requested, then
         if [[ $INSTALLED_REQUESTED = 1 ]]; then
             local SOURCE='installed'
             if [[ $QUIET = 1 ]]; then
@@ -220,6 +235,7 @@ LATEST_VERSIONS_func() {
                 echo "Latest $TYPE $FILES_TEXT ($SOURCE): $(LATEST_INSTALLED_VERSIONS_func "$TYPE")"
             fi
         fi
+        # If the latest release binaries are requested, then
         if [[ $RELEASE_REQUESTED = 1 ]]; then
             local SOURCE='release'
             if [[ $QUIET = 1 ]]; then
