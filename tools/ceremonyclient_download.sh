@@ -15,14 +15,11 @@ USAGE_func() {
     echo "       -q    Quiet mode."
     echo "       -f    Specific node/qclient files to download."
     echo "             Only supply a filename, not a filetype, e.g. 'node-2.0.5.1-darwin-arm64'."
+    echo "       -d    (Optional) Directory to install binaries to."
+    echo "             By default, the directory for install is determined by the 'ceremonyclient_node_dir' key in .localenv."
     echo ""
     exit 0
 }
-
-# Set to 1 by using the -q flag; quietens unnecessary output
-QUIET=0
-
-CEREMONYCLIENT_NODE_DIR=$(./ceremonyclient_env.sh -key "ceremonyclient_node_dir")
 
 # Function to fetch the files from quilibrium.com
 FETCH_FILES_func() {
@@ -119,16 +116,38 @@ DOWNLOAD_AND_CONFIRM_func() {
 
 
 
-while getopts "xhqf:" opt; do
+while getopts "xhqf:d:" opt; do
     case "$opt" in
         x) set -x;;
         h) USAGE_func; exit 0;;
         q) QUIET=1;;
         f) FILE_PATTERN="$OPTARG";;
+        d) DIRECTORY="$OPTARG";;
         *) USAGE_func; exit 0;;
     esac
 done
 shift $((OPTIND -1))
+
+# Set to 1 by using the -q flag; quietens unnecessary output
+QUIET=0
+
+# For the ceremonyclient node directory
+# If a directory was supplied via the -d option, use it
+# Otherwise, use the directory in the .localenv
+if [[ -z "$DIRECTORY" ]]; then
+    CEREMONYCLIENT_NODE_DIR=$(./ceremonyclient_env.sh -key "ceremonyclient_node_dir")
+else
+    CEREMONYCLIENT_NODE_DIR="$DIRECTORY"
+fi
+
+# Make sure the ceremonyclient node dir that will be used actually exists
+if [[ -d "$CEREMONYCLIENT_NODE_DIR" && -G "$CEREMONYCLIENT_NODE_DIR" ]]; then
+    :
+else
+    echo "Error: $CEREMONYCLIENT_NODE_DIR cannot be used for the install of binaries."
+    echo "Directory either does not exist, or is not usable by this user."
+    exit 1
+fi
 
 # Type of binaries - node or qclient
 TYPE=$(echo "$FILE_PATTERN" | awk -F'-' '{print $1}')
