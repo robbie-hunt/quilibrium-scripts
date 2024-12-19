@@ -19,10 +19,12 @@ USAGE_func() {
     exit 0
 }
 
+# Set to 1 by using the -q flag; quietens unnecessary output
 QUIET=0
 
 CEREMONYCLIENT_NODE_DIR=$(./ceremonyclient_env.sh -key "ceremonyclient_node_dir")
 
+# Function to fetch the files from quilibrium.com
 FETCH_FILES_func() {
     if [[ ! $(curl -s -S "$URL" | grep -s "$FILE_PATTERN") ]]; then
         if [[ "$QUIET" == 1 ]]; then
@@ -47,6 +49,8 @@ FETCH_FILES_func() {
     done
 }
 
+# Function to roughly check filesizes to make sure they downloaded correctly
+# Makes the main node/qclient binary executable too
 CHECK_FILESIZES_MAKE_EXECUTABLE_func() {
     local FILES_TO_CHECK="$1"
 
@@ -81,6 +85,7 @@ CHECK_FILESIZES_MAKE_EXECUTABLE_func() {
     done
 }
 
+# Double-checks that the files downloaded are the same as the files available from quilibrium.com
 CONFIRM_NEW_BINARIES_func() {
     NEW_LATEST_FILE_INSTALLED_PATH=$(./ceremonyclient_env.sh -latest-version "$TYPE-installed-files-quiet")
     NEW_LATEST_FILE_INSTALLED_FILENAME=$(echo "$NEW_LATEST_FILE_INSTALLED_PATH" | awk -F'/' '{print $NF}' | xargs)
@@ -106,6 +111,7 @@ CONFIRM_NEW_BINARIES_func() {
     fi
 }
 
+# Function to run the whole download operation
 DOWNLOAD_AND_CONFIRM_func() {
     FETCH_FILES_func "$1"
     CONFIRM_NEW_BINARIES_func
@@ -124,10 +130,14 @@ while getopts "xhqf:" opt; do
 done
 shift $((OPTIND -1))
 
+# Type of binaries - node or qclient
 TYPE=$(echo "$FILE_PATTERN" | awk -F'-' '{print $1}')
+# 'node_release_url' or 'qclient_release_url'
 TYPE_AS_KEY=$(echo $TYPE"_release_url")
+# URL to fetch files from
 URL=$(./ceremonyclient_env.sh -key "$TYPE_AS_KEY")
 
+# Get the filename (and path, for the installed binary) of the latest version of the main qclient/node binary
 LATEST_VERSION_INSTALLED=$(./ceremonyclient_env.sh -latest-version "$TYPE-installed-files-quiet")
 LATEST_VERSION_RELEASED=$(./ceremonyclient_env.sh -latest-version "$TYPE-release-files-quiet")
 
