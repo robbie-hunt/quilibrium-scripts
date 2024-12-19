@@ -20,6 +20,7 @@ USAGE_func() {
     exit 0
 }
 
+# Compare the currently installed binary with the latest available binary from release
 COMPARE_VERSIONS_func() {
     local FILE_INSTALLED=$(echo "$1" | awk -F'/' '{print $NF}' | xargs)
     local FILE_INSTALLED_PATH="$1"
@@ -29,57 +30,66 @@ COMPARE_VERSIONS_func() {
         echo "$FILE_INSTALLED file installed is the latest version, no need to update."
     else
         echo "Update required for $FILE_INSTALLED."
-        #FETCH_FILES_func "$FILE_RELEASE"
         ./tools/ceremonyclient_download.sh -f "$FILE_RELEASE"
     fi
 }
 
-UPDATE_DAEMON_FILE_func() {
+# Update either the start_cluster script or the actual service file with the new node binary, depending on whether -c was used
+UPDATE_SERVICE_FILE_func() {
+    # If cluster, update start_cluster script
     if [[ $CLUSTER == 1 ]]; then
-        # Update start_cluster script
         sed -i "s/NODE_BINARY\=[^<]*/$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
-        # sed "s/NODE_BINARY\=[^<]*/NODE_BINARY\=$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
+    # If not cluster, then
     else
+        # If macOS, update launchctl plist file
         if [[ "$RELEASE_OS" == "darwin" ]]; then
-            # Update launchctl plist file
             sudo sed -i "s/node-[^<]*/$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" /Library/LaunchDaemons/local.ceremonyclient.plist
-            # sudo sed "s/node-[^<]*/$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" /Library/LaunchDaemons/local.ceremonyclient.plist
+        # If Linux, update systemctl service file
         elif [[ "$RELEASE_OS" == "linux" ]]; then
-            # Update systemctl service file
             sed -i "/^ExecStart\=.*/c ExecStart\=$NEW_LATEST_NODE_FILE_INSTALLED_PATH" /lib/systemd/system/ceremonyclient.service
-            # sed "/^ExecStart\=.*/c ExecStart\=$NEW_LATEST_NODE_FILE_INSTALLED_PATH" /lib/systemd/system/ceremonyclient.service
         fi
     fi
 }
 
 ALTER_RELOAD_RESTART_DAEMONS_func() {
+    # If macOS, then update launchctl plist file and restart service
+    # Using launchctl commands 'bootout' and 'bootstrap' instead of the deprecated 'load' and 'unload' commands
     if [[ "$RELEASE_OS" == "darwin" ]]; then
+        # Disable and unload the service
         sudo launchctl disable system/local.ceremonyclient
         sleep 2
         sudo launchctl bootout system /Library/LaunchDaemons/local.ceremonyclient.plist
         sleep 2
 
-        UPDATE_DAEMON_FILE_func
+        UPDATE_SERVICE_FILE_func
 
+        # Enable, load and start service
         sudo launchctl enable system/local.ceremonyclient
         sleep 2
         sudo launchctl bootstrap system /Library/LaunchDaemons/local.ceremonyclient.plist
         sleep 2
+        # Use kickstart with the -k flag to kill any currently running ceremonyclient services,
+        # and -p flag to print the PID of the service that starts up
+        # This ensures only one ceremonyclient service running
         launchctl kickstart -kp system/local.ceremonyclient
 
+        # Let service sit for 60s, then print out the logfile
         echo "ceremonyclient updated and restarted. Waiting 60s before printing a status read from the ceremonyclient daemon."
         sleep 60
-        tail -F /Users/robbie/ceremonyclient.log
+        tail -F "$CEREMONYCLIENT_LOGFILE"
+    # If Linux, then update systemctl service file and restart service
     elif [[ "$RELEASE_OS" == "linux" ]]; then
         systemctl stop ceremonyclient
         sleep 2
 
-        UPDATE_DAEMON_FILE_func
+        UPDATE_SERVICE_FILE_func
 
+        # Enable, load and start service
         systemctl daemon-reload
         sleep 2
         systemctl restart ceremonyclient
 
+        # Let service sit for 60s, then print out the logfile
         echo "ceremonyclient daemon updated and reloaded. Waiting 60s before printing a status read from the ceremonyclient daemon."
         sleep 60
         systemctl status ceremonyclient
@@ -121,6 +131,9 @@ if [[ -z "$DIRECTORY" ]]; then
 else
     CEREMONYCLIENT_NODE_DIR="$DIRECTORY"
 fi
+
+# Logfile location
+CEREMONYCLIENT_LOGFILE="$HOME/ceremonyclient.log"
 
 # Get the latest version of the main node and qclient binaries,
 # both installed and available in release
