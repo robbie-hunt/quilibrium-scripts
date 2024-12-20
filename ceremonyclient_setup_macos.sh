@@ -44,16 +44,17 @@ QCLIENT_VERSION=$(./tools/ceremonyclient_env.sh -latest-version 'qclient-release
 NODE_BINARY=$(./tools/ceremonyclient_env.sh -latest-version 'node-release-files-quiet')
 QCLIENT_BINARY=$(./tools/ceremonyclient_env.sh -latest-version 'qclient-release-files-quiet')
 
-# Get the OS and CPU arch as a string in the format 'os-arch'
-RELEASE_LINE=$(./tools/ceremonyclient_env.sh -release-line)
+RELEASE_ARCH=$(./tools/ceremonyclient_env.sh -arch)
+RELEASE_OS=$(./tools/ceremonyclient_env.sh -os)
+RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
 
 
 
 # Install dependancies
     # If macOS, install homebrew, then git gmp rsync rclone
-    # If Linux, git make build-essential libgmp-dev rsync rclone wget curl sudo
-# Install Go, Rust, gRPC
-# Set up bashrc/zshrc with Go and Rust
+    # If Linux, install git make build-essential libgmp-dev rsync rclone wget curl sudo
+    # Install Go, Rust, gRPC
+    # Set up bashrc/zshrc with Go and Rust
 # Download node binary, make it executable
 # Download qclient binary, make it executable
 # Build the service file, load it up
@@ -66,7 +67,73 @@ RELEASE_LINE=$(./tools/ceremonyclient_env.sh -release-line)
 # If cluster, config cluster instructions
 # Instructions on setting up backups
 
+# ZSH is the default macOS terminal
+ALTER_MAC_ZSH_PROFILE_func() {
+    tee ~/.zshrc > /dev/null <<EOF
 
+
+# Terminal display preferences
+autoload -Uz vcs_info
+precmd() { vcs_info }
+
+zstyle ':vcs_info:git:*' formats '%b '
+
+setopt PROMPT_SUBST
+PROMPT='%F{green}%n@%m%f %F{green}%*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f$ '
+
+# Quil nodes
+export GOROOT=/usr/local/go
+export GOPATH=$HOME/go
+. "$HOME/.cargo/env"
+export GO111MODULE=on
+export GOPROXY=https://goproxy.cn,direct
+export PATH=$PATH:/usr/local/go/bin
+EOF
+
+    . ~/.zshrc
+}
+
+# Bash is MY default Linux terminal - adjust this to preference
+ALTER_LINUX_BASHRC_PROFILE_func() {
+    # PS1='${debian_chroot:+($debian_chroot)}\[\033[0;32m\]\u@\h\[\033[00m\] \[\033[0;32m\]\D{%H:%M:%S}\[\033[00m\] \[\033[0;34m\]\w\[\033[00m\] $ '
+
+    tee ~/.bashrc > /dev/null <<EOF
+
+
+# Quil nodes
+GOROOT=/usr/local/go
+GOPATH=$HOME/go
+GO111MODULE=on
+GOPROXY=https://goproxy.cn,direct
+PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+. "$HOME/.cargo/env"
+EOF
+    
+    . ~/.bashrc
+}
+
+INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func() {
+    MAC_BREW_DEPENDANCIES="git gmp rsync rclone"
+    LINUX_APT_DEPENDANCIES="git make build-essential libgmp-dev rsync rclone wget curl sudo"
+    GOLANG_URL="https://go.dev/dl/go1.22.10.$RELEASE_OS-$RELEASE_ARCH.tar.gz"
+
+    # If macOS then
+    if [[ "$RELEASE_OS" == 'darwin' ]]; then
+        # Install brew, dependancies, Golang, Rust, gRPC
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        brew install "$MAC_BREW_DEPENDANCIES"
+        curl -s -S "$GOLANG_URL" --output go.tar.gz
+        tar -xvf go.tar.gz
+        mv go /usr/local
+        rm go.tar.gz
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+        cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.2.2+v0.25.0
+        go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+    # If Linux then
+    elif [[ "$RELEASE_OS" == 'linux' ]]; then
+        apt install "$LINUX_APT_DEPENDANCIES"
+    fi
+}
 
 FETCH_FILES_func() {
     local FILE_PATTERN="$1"
