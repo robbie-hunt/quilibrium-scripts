@@ -20,36 +20,20 @@ USAGE_func() {
     exit 0
 }
 
-# For the ceremonyclient node directory
-# If a directory was supplied via the -d option, use it
-# Otherwise, use the directory in the .localenv
-if [[ -z "$DIRECTORY" ]]; then
-    CEREMONYCLIENT_NODE_DIR=$(./ceremonyclient_env.sh -key "ceremonyclient_node_dir")
-else
-    CEREMONYCLIENT_NODE_DIR="$DIRECTORY"
-fi
+# Figure out what directory I'm in
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$SCRIPT_DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+SCRIPT_ROOT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print}' | sed 's/\/*$//')
 
-# (macOS only) The logfile that will be used for the ceremonyclient
-CEREMONYCLIENT_LOGFILE="$HOME/ceremonyclient.log"
+# .localenv file location
+LOCALENV="$SCRIPT_ROOT_DIR/.localenv"
 
-# Plist name and file
-PLIST_LABEL="local.ceremonyclient"
-PLIST_FILE=/Library/LaunchDaemons/$PLIST_LABEL.plist
-
-# Get the latest version numbers of the node and qclient binaries from release
-NODE_VERSION=$(./tools/ceremonyclient_env.sh -latest-version 'node-release-quiet')
-QCLIENT_VERSION=$(./tools/ceremonyclient_env.sh -latest-version 'qclient-release-quiet')
-
-# Get the latest version files of the node and qclient binaries from release
-NODE_BINARY=$(./tools/ceremonyclient_env.sh -latest-version 'node-release-files-quiet')
-QCLIENT_BINARY=$(./tools/ceremonyclient_env.sh -latest-version 'qclient-release-files-quiet')
-
-RELEASE_ARCH=$(./tools/ceremonyclient_env.sh -arch)
-RELEASE_OS=$(./tools/ceremonyclient_env.sh -os)
-RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
-
-
-
+# Initialise a .localenv file
 # Install dependancies
     # If macOS, install homebrew, then git gmp rsync rclone
     # If Linux, install git make build-essential libgmp-dev rsync rclone wget curl sudo
@@ -66,6 +50,18 @@ RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
 # Config gRPC instructions
 # If cluster, config cluster instructions
 # Instructions on setting up backups
+
+
+# Initialise a .localenv file
+INITIALISE_LOCALENV_func() {
+    ./tools/ceremonyclient_env.sh -env-init
+}
+
+# Install dependancies
+    # If macOS, install homebrew, then git gmp rsync rclone
+    # If Linux, install git make build-essential libgmp-dev rsync rclone wget curl sudo
+    # Install Go, Rust, gRPC
+    # Set up bashrc/zshrc with Go and Rust
 
 # ZSH is the default macOS terminal
 ALTER_MAC_ZSH_PROFILE_func() {
@@ -95,10 +91,11 @@ EOF
 
 # Bash is MY default Linux terminal - adjust this to preference
 ALTER_LINUX_BASHRC_PROFILE_func() {
-    # PS1='${debian_chroot:+($debian_chroot)}\[\033[0;32m\]\u@\h\[\033[00m\] \[\033[0;32m\]\D{%H:%M:%S}\[\033[00m\] \[\033[0;34m\]\w\[\033[00m\] $ '
-
     tee ~/.bashrc > /dev/null <<EOF
 
+
+# Terminal display preferences
+PS1='${debian_chroot:+($debian_chroot)}\[\033[0;32m\]\u@\h\[\033[00m\] \[\033[0;32m\]\D{%H:%M:%S}\[\033[00m\] \[\033[0;34m\]\w\[\033[00m\] $ '
 
 # Quil nodes
 GOROOT=/usr/local/go
@@ -129,11 +126,317 @@ INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func() {
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
         cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.2.2+v0.25.0
         go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+
+        # Adjust zsh profile
+        ALTER_MAC_ZSH_PROFILE_func
     # If Linux then
     elif [[ "$RELEASE_OS" == 'linux' ]]; then
+        # Install dependancies
         apt install "$LINUX_APT_DEPENDANCIES"
+
+        #  Adjust bash profile
+        ALTER_LINUX_BASH_PROFILE_func
     fi
 }
+
+# Download node binary, make it executable
+# Download qclient binary, make it executable
+
+# Download and make executable the node/qclient binaries
+DOWNLOAD_INSTALL_BINARIES_func() {
+    ./tools/ceremonyclient_download.sh -f "$NODE_BINARY"
+    ./tools/ceremonyclient_download.sh -f "$QCLIENT_BINARY"
+}
+
+# Build the service file, load it up
+    # If part of cluster, build service using start_cluster
+    # If macOS, launchctl with plutil test and log rotation
+    # If Linux, systemctl
+
+# Function to update the start_cluster script
+UPDATE_CLUSTER_FILE_func() {
+    if [[ $CLUSTER == 1 ]]; then
+        sed -i "s/NODE_BINARY\=[^<]*/$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
+    fi
+}
+
+# Function to fill the correct 'Program' and 'ProgramArgs' sections of the macOS plist file,
+# including a GOMAXPROCS environment variable, depending on whether this node is being set up as part of a cluster or not
+PLIST_ARGS_func() {
+    if [[ $CLUSTER == 1 ]]; then
+        PLIST_ARGS="<key>Program</key>
+    <string>$SCRIPT_ROOT_DIR/ceremonyclient_start_cluster.sh</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>$SCRIPT_ROOT_DIR/ceremonyclient_start_cluster.sh</string>
+        <string>--core-index-start</string>
+        <string>$CLUSTER_CORE_INDEX_START</string>
+        <string>--data-worker-count</string>
+        <string>$CLUSTER_DATA_WORKER_COUNT</string>
+    </array>
+    
+    <key>WorkingDirectory</key>
+    <string>$SCRIPT_ROOT_DIR</string>"
+    else
+        PLIST_ARGS="<key>Program</key>
+    <string>$CEREMONYCLIENT_NODE_DIR/$NODE_BINARY</string>
+    <key>ProgramArguments</key>
+    <string>$CEREMONYCLIENT_NODE_DIR/$NODE_BINARY</string>
+    
+    <key>WorkingDirectory</key>
+    <string>$CEREMONYCLIENT_NODE_DIR</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>GOMAXPROCS</key>
+        <string>$GOMAXPROCS</string>
+    </dict>"
+    fi
+}
+
+BUILD_MAC_LAUNCHCTL_PLIST_FILE_func() {
+    # If cluster, update the ceremonyclient_start_cluster.sh file with the right details
+    # so it can be used in the plist file
+    if [[ $CLUSTER == 1 ]]; then
+        UPDATE_CLUSTER_FILE_func
+    fi
+
+    # Calculate GOMAXPROCS based on the number of threads
+    GOMAXPROCS=$(sysctl -n hw.logicalcpu)
+
+    # Setup log file
+    rm -rf $CEREMONYCLIENT_LOGFILE
+    touch $CEREMONYCLIENT_LOGFILE   
+    chmod 644 $CEREMONYCLIENT_LOGFILE
+
+    # Generate the plist file arguments that change depending on whether this is a cluster node or not
+    PLIST_ARGS_func
+
+    tee $PLIST_FILE > /dev/null <<EOF
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<dict>
+    <key>Label</key>
+    <string>$PLIST_LABEL</string>
+
+    $PLIST_ARGS
+    
+    <key>UserName</key>
+    <string>$USER</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <dict>
+        <key>Crashed</key>
+        <true/>
+    </dict>
+
+    <key>ExitTimeOut</key>
+    <integer>30</integer>
+
+    <key>StandardErrorPath</key>
+    <string>$CEREMONYCLIENT_LOGFILE</string>
+
+    <key>StandardOutPath</key>
+    <string>$CEREMONYCLIENT_LOGFILE</string>
+</dict>
+</plist>
+EOF
+
+# Test service file
+PLUTIL_TEST=$(plutil -lint $PLIST_FILE)
+if [[ $PLUTIL_TEST == "$PLIST_FILE: OK" ]]; then
+    :
+else
+    echo "Error: plutil test on $PLIST_FILE file failed. Results below:"
+    echo "$PLUTIL_TEST"
+    exit 1
+fi
+
+# Configure log rotation
+sudo tee /etc/newsyslog.d/$PLIST_LABEL.conf > /dev/null <<EOF
+# logfilename [owner:group] mode count size when flags [/pid_file] [sig_num]
+$CEREMONYCLIENT_LOGFILE robbie:staff 644 3 1024 * JG
+EOF
+}
+
+SYSTEMCTL_SERVICE_FILE_ARGS_func() {
+    # If cluster, update the ceremonyclient_start_cluster.sh file with the right details
+    # so it can be used in the systemctl service file
+    if [[ $CLUSTER == 1 ]]; then
+        SYSTEMCTL_SERVICE_FILE_ARGS="ExecStart=$SCRIPT_ROOT_DIR/ceremonyclient_start_cluster.sh --core-index-start $CLUSTER_CORE_INDEX_START --data-worker-count $CLUSTER_DATA_WORKER_COUNT"
+    else
+        SYSTEMCTL_SERVICE_FILE_ARGS="ExecStart=$CEREMONYCLIENT_NODE_DIR/$NODE_BINARY
+Environment='GOMAXPROCS=1'"
+    fi
+}
+
+BUILD_LINUX_SYSTEMCTL_SERVICE_FILE_func() {
+    if [[ $CLUSTER == 1 ]]; then
+        UPDATE_CLUSTER_FILE_func
+    fi
+
+    # Calculate GOMAXPROCS based on the number of threads
+    GOMAXPROCS=$(nproc)
+
+    # Generate the systemctl service file arguments that change depending on whether this is a cluster node or not
+    SYSTEMCTL_SERVICE_FILE_ARGS_func
+
+    tee /lib/systemd/system/ceremonyclient.service > /dev/null <<EOF
+[Unit]
+Description=ceremonyclient service
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5s
+WorkingDirectory=$CEREMONYCLIENT_NODE_DIR
+$SYSTEMCTL_SERVICE_FILE_ARGS
+KillSignal=SIGINT
+TimeoutStopSec=30s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+}
+
+ALTER_RELOAD_RESTART_DAEMONS_func() {
+    # If macOS, then update launchctl plist file and restart service
+    # Using launchctl commands 'bootout' and 'bootstrap' instead of the deprecated 'load' and 'unload' commands
+    if [[ "$RELEASE_OS" == "darwin" ]]; then
+        BUILD_MAC_LAUNCHCTL_PLIST_FILE_func
+
+        # Enable, load and start service
+        sudo launchctl enable system/local.ceremonyclient
+        sleep 2
+        sudo launchctl bootstrap system /Library/LaunchDaemons/local.ceremonyclient.plist
+        sleep 2
+        # Use kickstart with the -k flag to kill any currently running ceremonyclient services,
+        # and -p flag to print the PID of the service that starts up
+        # This ensures only one ceremonyclient service running
+        launchctl kickstart -kp system/local.ceremonyclient
+
+        # Let service sit for 60s, then print out the logfile
+        echo "ceremonyclient daemon updated and restarted. Waiting 5 mins before printing from the logfile ceremonyclient."
+        sleep 300
+        tail -200 "$CEREMONYCLIENT_LOGFILE"
+        echo "---- End of logs print ----"
+        echo ""
+    # If Linux, then update systemctl service file and restart service
+    elif [[ "$RELEASE_OS" == "linux" ]]; then
+        BUILD_LINUX_SYSTEMCTL_SERVICE_FILE_func
+
+        # Enable, load and start service
+        systemctl daemon-reload
+        sleep 2
+        systemctl start ceremonyclient
+
+        # Let service sit for 60s, then print out the logfile
+        echo "ceremonyclient service updated and reloaded. Waiting 5 mins before printing from the logfile ceremonyclient."
+        sleep 300
+        journalctl --unit=ceremonyclient.service -n 200
+        echo "---- End of logs print ----"
+        echo ""
+    fi
+}
+
+CONFIG_CHANGES_func() {
+    # Enable gRPC
+    ./tools/ceremonyclient_grpc.sh -q -L
+    ./tools/ceremonyclient_grpc.sh -q -P
+
+    # Set maxFrames (frame truncation) to 1001 frames, to save on disk space
+    sudo sed -i -E 's|maxFrames: .*|maxFrames: 1001|' "$CEREMONYCLIENT_CONFIG_FILE"
+
+
+}
+
+FINISHING_TIPS_func() {
+    if [[ $CLUSTER == 1 ]]; then
+        echo "- Make sure to configure the 'dataWorkersMultiaddrs' section of 'engine' in $CEREMONYCLIENT_CONFIG"
+        echo "  is adjusted ON ALL MACHINES to the correct settings, in order for this node to function as part of the cluster."
+    fi
+    echo "Recommended tips:"
+    if [[ $CLUSTER == 1 ]]; then
+        echo "- Make sure to configure the 'dataWorkersMultiaddrs' section of 'engine' in $CEREMONYCLIENT_CONFIG"
+        echo "  is adjusted ON ALL MACHINES to the correct settings, in order for this node to function as part of the cluster."
+    fi
+    echo "To set up backups, "
+    echo ""
+}
+
+# Instructions on setting up backups
+
+# Set to 1 by using the -q flag; quietens unnecessary output
+QUIET=0
+
+# Filled with data by using -C and -D; for setting up node as part of cluster
+CLUSTER_CORE_INDEX_START=0
+CLUSTER_DATA_WORKER_COUNT=0
+
+while getopts "xhqcC:D:" opt; do
+    case "$opt" in
+        x) set -x;;
+        h) USAGE_func; exit 0;;
+        q) QUIET=1;;
+        c) CLUSTER=1;;
+        C) CLUSTER_CORE_INDEX_START="$OPTARG";;
+        D) CLUSTER_DATA_WORKER_COUNT="$OPTARG";;
+        *) USAGE_func; exit 0;;
+    esac
+done
+shift $((OPTIND -1))
+
+# Make sure that if -c is used, -C and -D are also supplied
+if [[ "$CLUSTER" == 1 ]]; then
+    if [[ "$CLUSTER_CORE_INDEX_START" == 0 || "$CLUSTER_DATA_WORKER_COUNT" == 0 ]]; then
+        echo "Error: when using -c to indicate that this node is being set up as part of a cluster,"
+        echo "please also use the [-C core index] and [-D number of data workers] flags."
+        exit 1
+    fi
+    :
+else
+    :
+fi
+
+# For the ceremonyclient node directory
+# If a directory was supplied via the -d option, use it
+# Otherwise, use the directory in the .localenv
+if [[ -z "$DIRECTORY" ]]; then
+    CEREMONYCLIENT_NODE_DIR=$(./ceremonyclient_env.sh -key "ceremonyclient_node_dir")
+else
+    CEREMONYCLIENT_NODE_DIR="$DIRECTORY"
+fi
+
+# (macOS only) The logfile that will be used for the ceremonyclient
+CEREMONYCLIENT_LOGFILE="$HOME/ceremonyclient.log"
+
+# Ceremonyclient config file location
+CEREMONYCLIENT_CONFIG_FILE=$(./tools/ceremonyclient_env.sh -key "ceremonyclient_config")
+
+# Plist name and file
+PLIST_LABEL="local.ceremonyclient"
+PLIST_FILE=/Library/LaunchDaemons/$PLIST_LABEL.plist
+
+# Get the latest version numbers of the node and qclient binaries from release
+NODE_VERSION=$(./tools/ceremonyclient_env.sh -latest-version 'node-release-quiet')
+QCLIENT_VERSION=$(./tools/ceremonyclient_env.sh -latest-version 'qclient-release-quiet')
+
+# Get the latest version files of the node and qclient binaries from release
+NODE_BINARY=$(./tools/ceremonyclient_env.sh -latest-version 'node-release-files-quiet')
+QCLIENT_BINARY=$(./tools/ceremonyclient_env.sh -latest-version 'qclient-release-files-quiet')
+
+RELEASE_ARCH=$(./tools/ceremonyclient_env.sh -arch)
+RELEASE_OS=$(./tools/ceremonyclient_env.sh -os)
+RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
+
+
+
+
+
+
 
 FETCH_FILES_func() {
     local FILE_PATTERN="$1"

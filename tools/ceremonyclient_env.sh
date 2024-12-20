@@ -112,12 +112,12 @@ INITIALISE_LOCAL_ENV_func() {
     else
         touch "$LOCALENV"
         sudo tee "$LOCALENV" > /dev/null <<EOF
-ceremonyclient_root_dir=
-ceremonyclient_node_dir=
-ceremonyclient_config=
+ceremonyclient_root_dir=$HOME/ceremonyclient
+ceremonyclient_node_dir=$HOME/ceremonyclient/node
+ceremonyclient_config=$HOME/ceremonyclient/node/.config/config.yml
 peer_id=
-node_release_url=
-qclient_release_url=
+node_release_url=https://releases.quilibrium.com/release
+qclient_release_url=https://releases.quilibrium.com/qclient-release
 EOF
     fi
 }
