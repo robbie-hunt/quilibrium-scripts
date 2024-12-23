@@ -13,7 +13,7 @@ USAGE_func() {
     echo "       -h    Display this help dialogue."
     echo "       -x    For debugging the script; sets the x shell builtin, 'set -x'."
     echo "       -l    Set up local gRPC on a node."
-    echo "       -p    Run public gRPC (without a node; just qclient).."
+    echo "       -p    Set up public gRPC (without a node; just qclient)."
     echo ""
     exit 0
 }
@@ -162,24 +162,13 @@ while getopts "xhqlpLP" opt; do
         x) set -x;;
         h) USAGE_func;;
         q) QUIET=1;;
+        g) INSTALL_GO_GRPC_PACKAGE_func;;
         l)
-            INSTALL_GO_GRPC_PACKAGE_func
             SETUP_LOCAL_GRPC_func
             SETUP_STATS_COLLECTION_func
             echo -e "\nConfiguration of local gRPC & REST complete."
             ;;
         p)
-            INSTALL_GO_GRPC_PACKAGE_func
-            SETUP_PUBLIC_GRPC_func
-            SETUP_STATS_COLLECTION_func
-            echo -e "\nConfiguration of public gRPC complete."
-            ;;
-        L)
-            SETUP_LOCAL_GRPC_func
-            SETUP_STATS_COLLECTION_func
-            echo -e "\nConfiguration of public gRPC complete."
-            ;;
-        P)
             SETUP_PUBLIC_GRPC_func
             SETUP_STATS_COLLECTION_func
             echo -e "\nConfiguration of public gRPC complete."

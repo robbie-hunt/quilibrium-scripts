@@ -8,7 +8,7 @@ USAGE_func() {
     echo ""
     echo "Sets up a Quilibrium node on this machine."
     echo ""
-    echo "USAGE: bash ceremonyclient_setup.sh [-h] ] [-x] [-c]"
+    echo "USAGE: bash ceremonyclient_setup.sh [-h] [-x] [-c] [-d directory]"
     echo ""
     echo "       -h    Display this help dialogue."
     echo "       -x    For debugging the script; sets the x shell builtin, 'set -x'."
@@ -344,8 +344,9 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
 
 CONFIG_CHANGES_func() {
     # Enable gRPC
-    ./tools/ceremonyclient_grpc.sh -q -L
-    ./tools/ceremonyclient_grpc.sh -q -P
+    go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+    ./tools/ceremonyclient_grpc.sh -q -l
+    ./tools/ceremonyclient_grpc.sh -q -p
 
     # Set maxFrames (frame truncation) to 1001 frames, to save on disk space
     sudo sed -i -E 's|maxFrames: .*|maxFrames: 1001|' "$CEREMONYCLIENT_CONFIG_FILE"
@@ -354,14 +355,10 @@ CONFIG_CHANGES_func() {
 }
 
 FINISHING_TIPS_func() {
+    echo ""
     if [[ $CLUSTER == 1 ]]; then
-        echo "- Make sure to configure the 'dataWorkersMultiaddrs' section of 'engine' in $CEREMONYCLIENT_CONFIG"
-        echo "  is adjusted ON ALL MACHINES to the correct settings, in order for this node to function as part of the cluster."
-    fi
-    echo "Recommended tips:"
-    if [[ $CLUSTER == 1 ]]; then
-        echo "- Make sure to configure the 'dataWorkersMultiaddrs' section of 'engine' in $CEREMONYCLIENT_CONFIG"
-        echo "  is adjusted ON ALL MACHINES to the correct settings, in order for this node to function as part of the cluster."
+        echo "Make sure to configure the 'dataWorkersMultiaddrs' section of 'engine' in $CEREMONYCLIENT_CONFIG,"
+        echo "and that this section is the same ON ALL MACHINES in order for this node to function as part of the cluster."
     fi
     echo "To set up backups, "
     echo ""
