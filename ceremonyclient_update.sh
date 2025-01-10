@@ -164,6 +164,11 @@ LATEST_NODE_RELEASE=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 
 LATEST_QCLIENT_INSTALLED=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'qclient-install-files-quiet')
 LATEST_QCLIENT_RELEASE=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-release-files-quiet')
 
+echo "LATEST_NODE_INSTALLED: $LATEST_NODE_INSTALLED"
+echo "LATEST_NODE_INSTALLED: $LATEST_NODE_RELEASE"
+echo "LATEST_NODE_INSTALLED: $LATEST_QCLIENT_INSTALLED"
+echo "LATEST_NODE_INSTALLED: $LATEST_QCLIENT_RELEASE"
+
 echo "1111"
 COMPARE_VERSIONS_func "$LATEST_NODE_INSTALLED" "$LATEST_NODE_RELEASE"
 echo "2222"
