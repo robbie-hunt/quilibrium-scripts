@@ -115,6 +115,8 @@ DOWNLOAD_AND_CONFIRM_func() {
 }
 
 
+# Set to 1 by using the -q flag; quietens unnecessary output
+QUIET=0
 
 while getopts "xhqf:d:" opt; do
     case "$opt" in
@@ -127,9 +129,6 @@ while getopts "xhqf:d:" opt; do
     esac
 done
 shift $((OPTIND -1))
-
-# Set to 1 by using the -q flag; quietens unnecessary output
-QUIET=0
 
 # For the ceremonyclient node directory
 # If a directory was supplied via the -d option, use it
