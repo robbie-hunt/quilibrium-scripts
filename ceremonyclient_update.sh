@@ -159,9 +159,9 @@ CEREMONYCLIENT_LOGFILE="$HOME/ceremonyclient.log"
 
 # Get the latest version of the main node and qclient binaries,
 # both installed and available in release
-LATEST_NODE_INSTALLED=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-install-files-quiet')
+LATEST_NODE_INSTALLED=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet')
 LATEST_NODE_RELEASE=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-release-files-quiet')
-LATEST_QCLIENT_INSTALLED=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'qclient-install-files-quiet')
+LATEST_QCLIENT_INSTALLED=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'qclient-installed-files-quiet')
 LATEST_QCLIENT_RELEASE=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-release-files-quiet')
 
 echo "LATEST_NODE_INSTALLED: $LATEST_NODE_INSTALLED"
