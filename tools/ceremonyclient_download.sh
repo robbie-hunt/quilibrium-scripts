@@ -147,7 +147,6 @@ shift $((OPTIND -1))
 # If a directory was supplied via the -d option, use it
 # Otherwise, use the directory in the .localenv
 if [[ $DIRECTORY == 0 ]]; then
-    ls -laF
     CEREMONYCLIENT_NODE_DIR=$(. $SCRIPT_DIR/ceremonyclient_env.sh -key "ceremonyclient_node_dir")
 else
     CEREMONYCLIENT_NODE_DIR="$DIRECTORY"
