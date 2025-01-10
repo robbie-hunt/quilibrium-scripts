@@ -50,6 +50,9 @@ COMPARE_VERSIONS_func() {
 
 # Update either the start_cluster script or the actual service file with the new node binary, depending on whether -c was used
 UPDATE_SERVICE_FILE_func() {
+    NEW_LATEST_NODE_FILE_INSTALLED_PATH=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet')
+    NEW_LATEST_NODE_FILE_INSTALLED_FILENAME=$(echo "$NEW_LATEST_NODE_FILE_INSTALLED_PATH" | awk -F'/' '{print $NF}' | xargs)
+
     # If cluster, update start_cluster script
     if [[ $CLUSTER == 1 ]]; then
         sed -i "s/NODE_BINARY\=[^<]*/$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
@@ -164,17 +167,9 @@ LATEST_NODE_RELEASE=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 
 LATEST_QCLIENT_INSTALLED=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'qclient-installed-files-quiet')
 LATEST_QCLIENT_RELEASE=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'qclient-release-files-quiet')
 
-echo "LATEST_NODE_INSTALLED: $LATEST_NODE_INSTALLED"
-echo "LATEST_NODE_RELEASE: $LATEST_NODE_RELEASE"
-echo "LATEST_QCLIENT_INSTALLED: $LATEST_QCLIENT_INSTALLED"
-echo "LATEST_QCLIENT_RELEASE: $LATEST_QCLIENT_RELEASE"
-
-echo "1111"
 COMPARE_VERSIONS_func "$LATEST_NODE_INSTALLED" "$LATEST_NODE_RELEASE"
-echo "2222"
 COMPARE_VERSIONS_func "$LATEST_QCLIENT_INSTALLED" "$LATEST_QCLIENT_RELEASE"
 
-echo "3333"
 ALTER_RELOAD_RESTART_DAEMONS_func
 
 exit 0
