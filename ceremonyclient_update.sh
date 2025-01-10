@@ -20,6 +20,16 @@ USAGE_func() {
     exit 0
 }
 
+# Figure out what directory I'm in
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$SCRIPT_DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+SCRIPT_ROOT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print}' | sed 's/\/*$//')
+
 # Compare the currently installed binary with the latest available binary from release
 COMPARE_VERSIONS_func() {
     local FILE_INSTALLED=$(echo "$1" | awk -F'/' '{print $NF}' | xargs)
@@ -30,7 +40,7 @@ COMPARE_VERSIONS_func() {
         echo "$FILE_INSTALLED file installed is the latest version, no need to update."
     else
         echo "Update required for $FILE_INSTALLED."
-        ./tools/ceremonyclient_download.sh -f "$FILE_RELEASE"
+        . $SCRIPT_DIR/tools/ceremonyclient_download.sh -f "$FILE_RELEASE"
     fi
 }
 
@@ -119,23 +129,23 @@ while getopts "xhqcd:" opt; do
 done
 shift $((OPTIND -1))
 
-if $(./tools/ceremonyclient_check_localenv.sh -q); then
+if $(. $SCRIPT_DIR/tools/ceremonyclient_check_localenv.sh -q); then
     :
 else
-    ./tools/ceremonyclient_check_localenv.sh
+    . $SCRIPT_DIR/tools/ceremonyclient_check_localenv.sh
     exit 1
 fi
 
 # The OS of the machine running this script
-RELEASE_OS=$(./tools/ceremonyclient_env.sh -os)
+RELEASE_OS=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh.sh -os)
 # The release line ('os-arch') of the machine running this script
-RELEASE_LINE=$(./tools/ceremonyclient_env.sh -release-line)
+RELEASE_LINE=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh.sh -release-line)
 
 # For the ceremonyclient node directory
 # If a directory was supplied via the -d option, use it
 # Otherwise, use the directory in the .localenv
 if [[ $DIRECTORY == 0 ]]; then
-    CEREMONYCLIENT_NODE_DIR=$(./tools/ceremonyclient_env.sh -key "ceremonyclient_node_dir")
+    CEREMONYCLIENT_NODE_DIR=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -key "ceremonyclient_node_dir")
 else
     CEREMONYCLIENT_NODE_DIR="$DIRECTORY"
 fi
@@ -145,10 +155,10 @@ CEREMONYCLIENT_LOGFILE="$HOME/ceremonyclient.log"
 
 # Get the latest version of the main node and qclient binaries,
 # both installed and available in release
-LATEST_NODE_INSTALLED=$(./tools/ceremonyclient_env.sh -latest-version 'node-install-files-quiet')
-LATEST_NODE_RELEASE=$(./tools/ceremonyclient_env.sh -latest-version 'node-release-files-quiet')
-LATEST_QCLIENT_INSTALLED=$(./tools/ceremonyclient_env.sh -latest-version 'qclient-install-files-quiet')
-LATEST_QCLIENT_RELEASE=$(./tools/ceremonyclient_env.sh -latest-version 'node-release-files-quiet')
+LATEST_NODE_INSTALLED=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh.sh -latest-version 'node-install-files-quiet')
+LATEST_NODE_RELEASE=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh.sh -latest-version 'node-release-files-quiet')
+LATEST_QCLIENT_INSTALLED=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh.sh -latest-version 'qclient-install-files-quiet')
+LATEST_QCLIENT_RELEASE=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh.sh -latest-version 'node-release-files-quiet')
 
 COMPARE_VERSIONS_func "$LATEST_NODE_INSTALLED" "$LATEST_NODE_RELEASE"
 COMPARE_VERSIONS_func "$LATEST_QCLIENT_INSTALLED" "$LATEST_QCLIENT_RELEASE"
