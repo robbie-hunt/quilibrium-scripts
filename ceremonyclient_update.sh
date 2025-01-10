@@ -38,7 +38,7 @@ COMPARE_VERSIONS_func() {
 
     echo "FILE_INSTALLED: $FILE_INSTALLED"
     echo "FILE_INSTALLED_PATH: $FILE_INSTALLED_PATH"
-    echp "FILE_RELEASE: $FILE_RELEASE"
+    echo "FILE_RELEASE: $FILE_RELEASE"
 
     if [[ "$FILE_INSTALLED" == "$FILE_RELEASE" ]]; then
         echo "$FILE_INSTALLED file installed is the latest version, no need to update."
