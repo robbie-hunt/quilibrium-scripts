@@ -162,7 +162,7 @@ CEREMONYCLIENT_LOGFILE="$HOME/ceremonyclient.log"
 LATEST_NODE_INSTALLED=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet')
 LATEST_NODE_RELEASE=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-release-files-quiet')
 LATEST_QCLIENT_INSTALLED=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'qclient-installed-files-quiet')
-LATEST_QCLIENT_RELEASE=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-release-files-quiet')
+LATEST_QCLIENT_RELEASE=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'qclient-release-files-quiet')
 
 echo "LATEST_NODE_INSTALLED: $LATEST_NODE_INSTALLED"
 echo "LATEST_NODE_RELEASE: $LATEST_NODE_RELEASE"
