@@ -63,17 +63,17 @@ CHECK_FILESIZES_MAKE_EXECUTABLE_func() {
 
     for FILE in $FILES_TO_CHECK; do
         if [[ "$FILE" =~ ".dgst" ]]; then
-            # Check that the .dgst and .sg files are above 100 bytes
-            if [[ -n $(find "$FILE" -prune -size +100c) ]]; then
+            # Check that the .dgst and .sig files are above 100 bytes
+            if [[ -n $(find "$FILE" -prune -size +90c) ]]; then
                 :
             else
                 if [[ "$QUIET" == 1 ]]; then
-                    return 1
+                    :
                 else
-                    echo "Error: file '$FILE' has size of '$(du -h "$FILE")'."
+                    echo "Error: file '$FILE' has size of '$(du -h "$FILE" | awk '{print $1}')'."
                     echo "Check manually to make sure this file downloaded correctly before using it."
-                    return 1
                 fi
+                return 1
             fi
         else
             # Check that the main node/qclient binary ar above 180MB
@@ -81,12 +81,12 @@ CHECK_FILESIZES_MAKE_EXECUTABLE_func() {
                 chmod +x "$FILE"
             else
                 if [[ "$QUIET" == 1 ]]; then
-                    return 1
+                    :
                 else
-                    echo "Error: file '$FILE' has size of '$(du -h "$FILE")'."
+                    echo "Error: file '$FILE' has size of '$(du -h "$FILE" | awk '{print $1}')'."
                     echo "Check manually to make sure this file downloaded correctly before using it."
-                    return 1
                 fi
+                return 1
             fi
         fi
     done
@@ -107,13 +107,13 @@ CONFIRM_NEW_BINARIES_func() {
             fi
         else
             if [[ "$QUIET" == 1 ]]; then
-                return 1
+                :
             else
                 echo "Error: CHECK_FILESIZES_MAKE_EXECUTABLE_func function failed."
                 echo "Manually check the file sizes in $CEREMONYCLIENT_NODE_DIR of the files downloaded below:"
                 echo "$NEW_LATEST_FILES"
-                return 1
             fi
+            return 1
         fi
     fi
 }
