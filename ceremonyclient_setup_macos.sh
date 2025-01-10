@@ -369,6 +369,9 @@ FINISHING_TIPS_func() {
 # Set to 1 by using the -q flag; quietens unnecessary output
 QUIET=0
 
+# To indicate to the script that this node is being set up as part of a cluster
+CLUSTER=0
+
 # Filled with data by using -C and -D; for setting up node as part of cluster
 CLUSTER_CORE_INDEX_START=0
 CLUSTER_DATA_WORKER_COUNT=0

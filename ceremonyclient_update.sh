@@ -96,7 +96,16 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
     fi
 }
 
+# Set to 1 by using the -q flag; quietens unnecessary output
+QUIET=0
 
+# Set to 1 by using the -c flag; indicates that this node is running as part of a cluster
+# This simply means that when it comes to updating daemon/service files, this script will update the
+# ceremonyclient_start_cluster.sh script with the new node filename, and not the daemon/service file.
+CLUSTER=0
+
+# Supply a node directory using the -d flag
+DIRECTORY=0
 
 while getopts "xhqcd:" opt; do
     case "$opt" in
@@ -110,13 +119,13 @@ while getopts "xhqcd:" opt; do
 done
 shift $((OPTIND -1))
 
-# Set to 1 by using the -q flag; quietens unnecessary output
-QUIET=0
-
-# Set to 1 by using the -c flag; indicates that this node is running as part of a cluster
-# This simply means that when it comes to updating daemon/service files, this script will update the
-# ceremonyclient_start_cluster.sh script with the new node filename, and not the daemon/service file.
-CLUSTER=0
+if ./tools/ceremonyclient_check_localenv.sh -q; then
+    echo "worked"
+    exit 0
+else
+    echo "didn't work"
+    exit 1
+fi
 
 # The OS of the machine running this script
 RELEASE_OS=$(./tools/ceremonyclient_env.sh -os)
@@ -126,8 +135,8 @@ RELEASE_LINE=$(./tools/ceremonyclient_env.sh -release-line)
 # For the ceremonyclient node directory
 # If a directory was supplied via the -d option, use it
 # Otherwise, use the directory in the .localenv
-if [[ -z "$DIRECTORY" ]]; then
-    CEREMONYCLIENT_NODE_DIR=$(./ceremonyclient_env.sh -key "ceremonyclient_node_dir")
+if [[ $DIRECTORY == 0 ]]; then
+    CEREMONYCLIENT_NODE_DIR=$(./tools/ceremonyclient_env.sh -key "ceremonyclient_node_dir")
 else
     CEREMONYCLIENT_NODE_DIR="$DIRECTORY"
 fi
