@@ -1,4 +1,6 @@
-#!/bin/bash
+# #!/bin/bash
+#!/usr/bin/env -S PS4='\\033[0;33m+(${BASH_SOURCE:-$0}:${LINENO}):\\033[0m ${FUNCNAME[0]:+${FUNCNAME[0]}(): }' bash -x
+
 
 # Set shell options
 set -eou pipefail
