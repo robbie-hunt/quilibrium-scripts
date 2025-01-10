@@ -118,6 +118,9 @@ DOWNLOAD_AND_CONFIRM_func() {
 # Set to 1 by using the -q flag; quietens unnecessary output
 QUIET=0
 
+# Supply a node directory using the -d flag
+DIRECTORY=0
+
 while getopts "xhqf:d:" opt; do
     case "$opt" in
         x) set -x;;
