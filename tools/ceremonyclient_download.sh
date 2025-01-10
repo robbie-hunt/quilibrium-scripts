@@ -21,6 +21,16 @@ USAGE_func() {
     exit 0
 }
 
+# Figure out what directory I'm in
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$SCRIPT_DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+SCRIPT_ROOT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print}' | sed 's/\/*$//')
+
 # Function to fetch the files from quilibrium.com
 FETCH_FILES_func() {
     if [[ ! $(curl -s -S "$URL" | grep -s "$FILE_PATTERN") ]]; then
@@ -137,7 +147,7 @@ shift $((OPTIND -1))
 # If a directory was supplied via the -d option, use it
 # Otherwise, use the directory in the .localenv
 if [[ $DIRECTORY == 0 ]]; then
-    CEREMONYCLIENT_NODE_DIR=$(./ceremonyclient_env.sh -key "ceremonyclient_node_dir")
+    CEREMONYCLIENT_NODE_DIR=$(.$SCRIPT_DIR/ceremonyclient_env.sh -key "ceremonyclient_node_dir")
 else
     CEREMONYCLIENT_NODE_DIR="$DIRECTORY"
 fi
