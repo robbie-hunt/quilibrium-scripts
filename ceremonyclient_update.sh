@@ -119,11 +119,10 @@ while getopts "xhqcd:" opt; do
 done
 shift $((OPTIND -1))
 
-if [[ ./tools/ceremonyclient_check_localenv.sh -q ]]; then
-    echo "worked"
-    exit 0
+if $(./tools/ceremonyclient_check_localenv.sh -q); then
+    :
 else
-    echo "didn't work"
+    ./tools/ceremonyclient_check_localenv.sh
     exit 1
 fi
 
