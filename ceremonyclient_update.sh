@@ -2,7 +2,7 @@
 
 # Set shell options
 set -eou pipefail
-#set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
+set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
 
 USAGE_func() {
     echo ""
@@ -32,7 +32,7 @@ SCRIPT_ROOT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print}'
 
 # Compare the currently installed binary with the latest available binary from release
 COMPARE_VERSIONS_func() {
-    local FILE_INSTALLED=$(echo "$1" | awk -F'/' '{print $NF}' | xargs)
+    local FILE_INSTALLED=$(echo $1 | awk -F'/' '{print $NF}' | xargs)
     local FILE_INSTALLED_PATH="$1"
     local FILE_RELEASE="$2"
 
