@@ -2,7 +2,7 @@
 
 # Set shell options
 set -eou pipefail
-set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
+#set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
 
 USAGE_func() {
     echo ""
@@ -35,10 +35,6 @@ COMPARE_VERSIONS_func() {
     local FILE_INSTALLED=$(echo $1 | awk -F'/' '{print $NF}' | xargs)
     local FILE_INSTALLED_PATH="$1"
     local FILE_RELEASE="$2"
-
-    echo "FILE_INSTALLED: $FILE_INSTALLED"
-    echo "FILE_INSTALLED_PATH: $FILE_INSTALLED_PATH"
-    echo "FILE_RELEASE: $FILE_RELEASE"
 
     if [[ "$FILE_INSTALLED" == "$FILE_RELEASE" ]]; then
         echo "$FILE_INSTALLED file installed is the latest version, no need to update."
