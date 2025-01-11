@@ -166,10 +166,10 @@ DOWNLOAD_INSTALL_BINARIES_func() {
 # Function to update the start_cluster script
 UPDATE_CLUSTER_FILE_func() {
     if [[ $CLUSTER == 1 ]]; then
-        sed -i "s/NODE_BINARY\=[^<]*/$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
+        sed -i "s/NODE_BINARY\=[^<]*/NODE_BINARY\=$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
     fi
 
-    return
+    return 0
 }
 
 # Function to fill the correct 'Program' and 'ProgramArgs' sections of the macOS plist file,
@@ -209,14 +209,14 @@ PLIST_ARGS_func() {
 }
 
 BUILD_MAC_LAUNCHCTL_PLIST_FILE_func() {
+    # Calculate GOMAXPROCS based on the number of threads
+    GOMAXPROCS=$(sysctl -n hw.logicalcpu)
+
     # If cluster, update the ceremonyclient_start_cluster.sh file with the right details
     # so it can be used in the plist file
     if [[ $CLUSTER == 1 ]]; then
         UPDATE_CLUSTER_FILE_func
     fi
-
-    # Calculate GOMAXPROCS based on the number of threads
-    GOMAXPROCS=$(sysctl -n hw.logicalcpu)
 
     # Setup log file
     rm -rf $CEREMONYCLIENT_LOGFILE
@@ -285,19 +285,19 @@ SYSTEMCTL_SERVICE_FILE_ARGS_func() {
         SYSTEMCTL_SERVICE_FILE_ARGS="ExecStart=$SCRIPT_ROOT_DIR/ceremonyclient_start_cluster.sh --core-index-start $CLUSTER_CORE_INDEX_START --data-worker-count $CLUSTER_DATA_WORKER_COUNT"
     else
         SYSTEMCTL_SERVICE_FILE_ARGS="ExecStart=$CEREMONYCLIENT_NODE_DIR/$NODE_BINARY
-Environment='GOMAXPROCS=1'"
+Environment='GOMAXPROCS=$GOMAXPROCS'"
     fi
 
     return
 }
 
 BUILD_LINUX_SYSTEMCTL_SERVICE_FILE_func() {
+    # Calculate GOMAXPROCS based on the number of threads
+    GOMAXPROCS=$(nproc)
+
     if [[ $CLUSTER == 1 ]]; then
         UPDATE_CLUSTER_FILE_func
     fi
-
-    # Calculate GOMAXPROCS based on the number of threads
-    GOMAXPROCS=$(nproc)
 
     # Generate the systemctl service file arguments that change depending on whether this is a cluster node or not
     SYSTEMCTL_SERVICE_FILE_ARGS_func
