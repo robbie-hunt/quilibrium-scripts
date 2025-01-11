@@ -275,20 +275,38 @@ QUIET=0
 # ceremonyclient_start_cluster.sh script with the new node filename, and not the daemon/service file.
 CLUSTER=0
 
+# Filled with data by using -C and -D; for setting up node as part of cluster
+CLUSTER_CORE_INDEX_START=0
+CLUSTER_DATA_WORKER_COUNT=0
+
 # Supply a node directory using the -d flag
 DIRECTORY=0
 
-while getopts "xhqcd:" opt; do
+while getopts "xhqc:C:D:d" opt; do
     case "$opt" in
         x) set -x;;
         h) USAGE_func; exit 0;;
         q) QUIET=1;;
         c) CLUSTER=1;;
+        C) CLUSTER_CORE_INDEX_START="$OPTARG";;
+        D) CLUSTER_DATA_WORKER_COUNT="$OPTARG";;
         d) DIRECTORY="$OPTARG";;
         *) USAGE_func; exit 0;;
     esac
 done
 shift $((OPTIND -1))
+
+# Make sure that if -c is used, -C and -D are also supplied
+if [[ "$CLUSTER" == 1 ]]; then
+    if [[ "$CLUSTER_CORE_INDEX_START" == 0 || "$CLUSTER_DATA_WORKER_COUNT" == 0 ]]; then
+        echo "Error: when using -c to indicate that this node is being set up as part of a cluster,"
+        echo "please also use the [-C core index] and [-D number of data workers] flags."
+        exit 1
+    fi
+    :
+else
+    :
+fi
 
 # Make sure .localenv is in order; if not, exit
 if $(bash $SCRIPT_DIR/tools/ceremonyclient_check_localenv.sh -q); then
