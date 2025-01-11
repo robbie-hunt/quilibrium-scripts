@@ -40,7 +40,7 @@ COMPARE_VERSIONS_func() {
         echo "$FILE_INSTALLED file installed is the latest version, no need to update."
     else
         echo "Update required for $FILE_INSTALLED."
-        . $SCRIPT_DIR/tools/ceremonyclient_download.sh -f "$FILE_RELEASE"
+        bash $SCRIPT_DIR/tools/ceremonyclient_download.sh -f "$FILE_RELEASE"
     fi
 }
 
@@ -132,6 +132,7 @@ while getopts "xhqcd:" opt; do
 done
 shift $((OPTIND -1))
 
+# Make sure .localenv is in order; if not, exit
 if $(. $SCRIPT_DIR/tools/ceremonyclient_check_localenv.sh -q); then
     :
 else
