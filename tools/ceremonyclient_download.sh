@@ -94,7 +94,7 @@ CHECK_FILESIZES_MAKE_EXECUTABLE_func() {
 
 # Double-checks that the files downloaded are the same as the files available from quilibrium.com
 CONFIRM_NEW_BINARIES_func() {
-    NEW_LATEST_FILE_INSTALLED_PATH=$(. $SCRIPT_DIR/ceremonyclient_env.sh -latest-version "$TYPE-installed-files-quiet")
+    NEW_LATEST_FILE_INSTALLED_PATH=$(bash $SCRIPT_DIR/ceremonyclient_env.sh -latest-version "$TYPE-installed-files-quiet")
     NEW_LATEST_FILE_INSTALLED_FILENAME=$(echo "$NEW_LATEST_FILE_INSTALLED_PATH" | awk -F'/' '{print $NF}' | xargs)
     NEW_LATEST_FILES=$(find "$CEREMONYCLIENT_NODE_DIR" -type f -name "$NEW_LATEST_FILE_INSTALLED_FILENAME*")
 
@@ -147,7 +147,7 @@ shift $((OPTIND -1))
 # If a directory was supplied via the -d option, use it
 # Otherwise, use the directory in the .localenv
 if [[ $DIRECTORY == 0 ]]; then
-    CEREMONYCLIENT_NODE_DIR=$(. $SCRIPT_DIR/ceremonyclient_env.sh -key "ceremonyclient_node_dir")
+    CEREMONYCLIENT_NODE_DIR=$(bash $SCRIPT_DIR/ceremonyclient_env.sh -key "ceremonyclient_node_dir")
 else
     CEREMONYCLIENT_NODE_DIR="$DIRECTORY"
 fi
@@ -166,11 +166,11 @@ TYPE=$(echo "$FILE_PATTERN" | awk -F'-' '{print $1}')
 # 'node_release_url' or 'qclient_release_url'
 TYPE_AS_KEY=$(echo $TYPE"_release_url")
 # URL to fetch files from
-URL=$(. $SCRIPT_DIR/ceremonyclient_env.sh -key "$TYPE_AS_KEY")
+URL=$(bash $SCRIPT_DIR/ceremonyclient_env.sh -key "$TYPE_AS_KEY")
 
 # Get the filename (and path, for the installed binary) of the latest version of the main qclient/node binary
-LATEST_VERSION_INSTALLED=$(. $SCRIPT_DIR/ceremonyclient_env.sh -latest-version "$TYPE-installed-files-quiet")
-LATEST_VERSION_RELEASED=$(. $SCRIPT_DIR/ceremonyclient_env.sh -latest-version "$TYPE-release-files-quiet")
+LATEST_VERSION_INSTALLED=$(bash $SCRIPT_DIR/ceremonyclient_env.sh -latest-version "$TYPE-installed-files-quiet")
+LATEST_VERSION_RELEASED=$(bash $SCRIPT_DIR/ceremonyclient_env.sh -latest-version "$TYPE-release-files-quiet")
 
 DOWNLOAD_AND_CONFIRM_func "$FILE_PATTERN"
 

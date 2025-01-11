@@ -2,7 +2,7 @@
 
 # Set shell options
 set -eou pipefail
-#set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
+set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
 
 USAGE_func() {
     echo ""
@@ -46,7 +46,7 @@ COMPARE_VERSIONS_func() {
 
 # Update either the start_cluster script or the actual service file with the new node binary, depending on whether -c was used
 UPDATE_SERVICE_FILE_func() {
-    NEW_LATEST_NODE_FILE_INSTALLED_PATH=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet')
+    NEW_LATEST_NODE_FILE_INSTALLED_PATH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet')
     NEW_LATEST_NODE_FILE_INSTALLED_FILENAME=$(echo "$NEW_LATEST_NODE_FILE_INSTALLED_PATH" | awk -F'/' '{print $NF}' | xargs)
 
     # If cluster, update start_cluster script
@@ -133,23 +133,23 @@ done
 shift $((OPTIND -1))
 
 # Make sure .localenv is in order; if not, exit
-if $(. $SCRIPT_DIR/tools/ceremonyclient_check_localenv.sh -q); then
+if $(bash $SCRIPT_DIR/tools/ceremonyclient_check_localenv.sh -q); then
     :
 else
-    . $SCRIPT_DIR/tools/ceremonyclient_check_localenv.sh
+    bash $SCRIPT_DIR/tools/ceremonyclient_check_localenv.sh
     exit 1
 fi
 
 # The OS of the machine running this script
-RELEASE_OS=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
+RELEASE_OS=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
 # The release line ('os-arch') of the machine running this script
-RELEASE_LINE=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -release-line)
+RELEASE_LINE=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -release-line)
 
 # For the ceremonyclient node directory
 # If a directory was supplied via the -d option, use it
 # Otherwise, use the directory in the .localenv
 if [[ $DIRECTORY == 0 ]]; then
-    CEREMONYCLIENT_NODE_DIR=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -key "ceremonyclient_node_dir")
+    CEREMONYCLIENT_NODE_DIR=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key "ceremonyclient_node_dir")
 else
     CEREMONYCLIENT_NODE_DIR="$DIRECTORY"
 fi
@@ -159,10 +159,10 @@ CEREMONYCLIENT_LOGFILE="$HOME/ceremonyclient.log"
 
 # Get the latest version of the main node and qclient binaries,
 # both installed and available in release
-LATEST_NODE_INSTALLED=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet')
-LATEST_NODE_RELEASE=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-release-files-quiet')
-LATEST_QCLIENT_INSTALLED=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'qclient-installed-files-quiet')
-LATEST_QCLIENT_RELEASE=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'qclient-release-files-quiet')
+LATEST_NODE_INSTALLED=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet')
+LATEST_NODE_RELEASE=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-release-files-quiet')
+LATEST_QCLIENT_INSTALLED=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'qclient-installed-files-quiet')
+LATEST_QCLIENT_RELEASE=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'qclient-release-files-quiet')
 
 COMPARE_VERSIONS_func "$LATEST_NODE_INSTALLED" "$LATEST_NODE_RELEASE"
 COMPARE_VERSIONS_func "$LATEST_QCLIENT_INSTALLED" "$LATEST_QCLIENT_RELEASE"

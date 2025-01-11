@@ -18,7 +18,7 @@ USAGE_func() {
     exit 0
 }
 
-CEREMONYCLIENT_CONFIG=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_config')
+CEREMONYCLIENT_CONFIG=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_config')
 
 # Function to check if a line exists in a file
 LINE_EXISTS_func_func() {

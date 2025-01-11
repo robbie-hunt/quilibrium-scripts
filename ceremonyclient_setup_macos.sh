@@ -54,7 +54,7 @@ LOCALENV="$SCRIPT_ROOT_DIR/.localenv"
 
 # Initialise a .localenv file
 INITIALISE_LOCALENV_func() {
-    . $SCRIPT_DIR/tools/ceremonyclient_env.sh -env-init
+    bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -env-init
 }
 
 # Install dependancies
@@ -144,8 +144,8 @@ INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func() {
 
 # Download and make executable the node/qclient binaries
 DOWNLOAD_INSTALL_BINARIES_func() {
-    . $SCRIPT_DIR/tools/ceremonyclient_download.sh -f "$NODE_BINARY"
-    . $SCRIPT_DIR/tools/ceremonyclient_download.sh -f "$QCLIENT_BINARY"
+    bash $SCRIPT_DIR/tools/ceremonyclient_download.sh -f "$NODE_BINARY"
+    bash $SCRIPT_DIR/tools/ceremonyclient_download.sh -f "$QCLIENT_BINARY"
 }
 
 # Build the service file, load it up
@@ -345,8 +345,8 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
 CONFIG_CHANGES_func() {
     # Enable gRPC
     go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
-    . $SCRIPT_DIR/tools/ceremonyclient_grpc.sh -q -l
-    . $SCRIPT_DIR/tools/ceremonyclient_grpc.sh -q -p
+    bash $SCRIPT_DIR/tools/ceremonyclient_grpc.sh -q -l
+    bash $SCRIPT_DIR/tools/ceremonyclient_grpc.sh -q -p
 
     # Set maxFrames (frame truncation) to 1001 frames, to save on disk space
     sudo sed -i -E 's|maxFrames: .*|maxFrames: 1001|' "$CEREMONYCLIENT_CONFIG_FILE"
@@ -405,7 +405,7 @@ fi
 # If a directory was supplied via the -d option, use it
 # Otherwise, use the directory in the .localenv
 if [[ -z "$DIRECTORY" ]]; then
-    CEREMONYCLIENT_NODE_DIR=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -key "ceremonyclient_node_dir")
+    CEREMONYCLIENT_NODE_DIR=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key "ceremonyclient_node_dir")
 else
     CEREMONYCLIENT_NODE_DIR="$DIRECTORY"
 fi
@@ -414,22 +414,22 @@ fi
 CEREMONYCLIENT_LOGFILE="$HOME/ceremonyclient.log"
 
 # Ceremonyclient config file location
-CEREMONYCLIENT_CONFIG_FILE=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -key "ceremonyclient_config")
+CEREMONYCLIENT_CONFIG_FILE=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key "ceremonyclient_config")
 
 # Plist name and file
 PLIST_LABEL="local.ceremonyclient"
 PLIST_FILE=/Library/LaunchDaemons/$PLIST_LABEL.plist
 
 # Get the latest version numbers of the node and qclient binaries from release
-NODE_VERSION=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-release-quiet')
-QCLIENT_VERSION=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'qclient-release-quiet')
+NODE_VERSION=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-release-quiet')
+QCLIENT_VERSION=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'qclient-release-quiet')
 
 # Get the latest version files of the node and qclient binaries from release
-NODE_BINARY=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-release-files-quiet')
-QCLIENT_BINARY=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'qclient-release-files-quiet')
+NODE_BINARY=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-release-files-quiet')
+QCLIENT_BINARY=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'qclient-release-files-quiet')
 
-RELEASE_ARCH=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -arch)
-RELEASE_OS=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
+RELEASE_ARCH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -arch)
+RELEASE_OS=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
 RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
 
 
@@ -441,7 +441,7 @@ RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
 FETCH_FILES_func() {
     local FILE_PATTERN="$1"
     local TYPE="$(echo $FILE_PATTERN | awk -F'-' '{print $1}')_release_url"
-    local URL=$(. $SCRIPT_DIR/tools/ceremonyclient_env.sh -key $TYPE)
+    local URL=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key $TYPE)
 
     # List files in most recent release
     RELEASE_FILES_AVAILABLE=$(curl -s -S $URL | grep $FILE_PATTERN)
