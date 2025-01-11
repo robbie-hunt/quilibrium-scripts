@@ -23,15 +23,18 @@ CEREMONYCLIENT_CONFIG=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'cerem
 # Function to check if a line exists in a file
 LINE_EXISTS_func_func() {
     grep -qF "$1" "$2"
+    return
 }
 
 # Function to add a line after a specific pattern
 ADD_LINE_AFTER_PATTERN_func() {
-    sudo sed -i "/^ *$1:/a\  $2" "$3" || { echo "Failed to add line after '$1'. Exiting..."; exit 1; }
+    sudo sed -i "/^ *$1:/a\  $2" "$3" || { echo "Failed to add line after '$1'. Exiting..."; return 1; }
+    return 0
 }
 
 INSTALL_GO_GRPC_PACKAGE_func() {
     go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+    return
 }
 
 # Function to check and modify listenMultiaddr
@@ -84,6 +87,7 @@ CHECK_MODIFY_LISTEN_MULTIADDR_func() {
             return 1
         fi
     fi
+    return
 }
 
 # Function to set up local gRPC
@@ -121,8 +125,8 @@ SETUP_PUBLIC_GRPC_func() {
     sudo sed -i '/^ *listenRESTMultiaddr:/d' '$CEREMONYCLIENT_CONFIG'
 
     # Add blank gRPC and local REST settings
-    echo "listenGrpcMultiaddr: \"\"" | sudo tee -a '$CEREMONYCLIENT_CONFIG' > /dev/null || { if [[ $QUIET == 1 ]]; then :; else echo "Failed to set blank gRPC. Exiting..."; fi; exit 1; }
-    echo "listenRESTMultiaddr: \"/ip4/127.0.0.1/tcp/8338\"" | sudo tee -a '$CEREMONYCLIENT_CONFIG' > /dev/null || { if [[ $QUIET == 1 ]]; then :; else echo "Failed to set REST. Exiting..."; fi; exit 1; }
+    echo "listenGrpcMultiaddr: \"\"" | sudo tee -a '$CEREMONYCLIENT_CONFIG' > /dev/null || { if [[ $QUIET == 1 ]]; then :; else echo "Failed to set blank gRPC. Exiting..."; fi; return 1; }
+    echo "listenRESTMultiaddr: \"/ip4/127.0.0.1/tcp/8338\"" | sudo tee -a '$CEREMONYCLIENT_CONFIG' > /dev/null || { if [[ $QUIET == 1 ]]; then :; else echo "Failed to set REST. Exiting..."; fi; return 1; }
 
     if [[ $QUIET == 1 ]]; then
         :
@@ -153,6 +157,7 @@ SETUP_STATS_COLLECTION_func() {
             echo "Stats collection already enabled."
         fi
     fi
+    return 0
 }
 
 
@@ -178,4 +183,4 @@ while getopts "xhqlpLP" opt; do
 done
 shift $((OPTIND -1))
 
-exit 0
+exit

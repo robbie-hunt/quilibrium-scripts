@@ -54,6 +54,7 @@ FETCH_FILES_func() {
             fi
         fi
     done
+    return 0
 }
 
 # Function to roughly check filesizes to make sure they downloaded correctly
@@ -90,6 +91,7 @@ CHECK_FILESIZES_MAKE_EXECUTABLE_func() {
             fi
         fi
     done
+    return 0
 }
 
 # Double-checks that the files downloaded are the same as the files available from quilibrium.com
@@ -116,12 +118,14 @@ CONFIRM_NEW_BINARIES_func() {
             return 1
         fi
     fi
+    return 0
 }
 
 # Function to run the whole download operation
 DOWNLOAD_AND_CONFIRM_func() {
     FETCH_FILES_func "$1"
     CONFIRM_NEW_BINARIES_func
+    return
 }
 
 
@@ -174,4 +178,4 @@ LATEST_VERSION_RELEASED=$(bash $SCRIPT_DIR/ceremonyclient_env.sh -latest-version
 
 DOWNLOAD_AND_CONFIRM_func "$FILE_PATTERN"
 
-exit 0
+exit

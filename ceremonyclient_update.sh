@@ -42,6 +42,7 @@ COMPARE_VERSIONS_func() {
         echo "Update required for $FILE_INSTALLED."
         bash $SCRIPT_DIR/tools/ceremonyclient_download.sh -f "$FILE_RELEASE"
     fi
+    return
 }
 
 # Update either the start_cluster script or the actual service file with the new node binary, depending on whether -c was used
@@ -62,6 +63,7 @@ UPDATE_SERVICE_FILE_func() {
             sed -i "/^ExecStart\=.*/c ExecStart\=$NEW_LATEST_NODE_FILE_INSTALLED_PATH" /lib/systemd/system/ceremonyclient.service
         fi
     fi
+    return
 }
 
 ALTER_RELOAD_RESTART_DAEMONS_func() {
@@ -107,6 +109,7 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
         sleep 60
         systemctl status ceremonyclient
     fi
+    return
 }
 
 # Set to 1 by using the -q flag; quietens unnecessary output
@@ -169,4 +172,4 @@ COMPARE_VERSIONS_func "$LATEST_QCLIENT_INSTALLED" "$LATEST_QCLIENT_RELEASE"
 
 ALTER_RELOAD_RESTART_DAEMONS_func
 
-exit 0
+exit

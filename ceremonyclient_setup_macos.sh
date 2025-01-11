@@ -55,6 +55,8 @@ LOCALENV="$SCRIPT_ROOT_DIR/.localenv"
 # Initialise a .localenv file
 INITIALISE_LOCALENV_func() {
     bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -env-init
+
+    return
 }
 
 # Install dependancies
@@ -87,6 +89,8 @@ export PATH=$PATH:/usr/local/go/bin
 EOF
 
     . ~/.zshrc
+
+    return
 }
 
 # Bash is MY default Linux terminal - adjust this to preference
@@ -107,6 +111,8 @@ PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 EOF
     
     . ~/.bashrc
+
+    return
 }
 
 INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func() {
@@ -137,6 +143,8 @@ INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func() {
         #  Adjust bash profile
         ALTER_LINUX_BASH_PROFILE_func
     fi
+
+    return
 }
 
 # Download node binary, make it executable
@@ -146,6 +154,8 @@ INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func() {
 DOWNLOAD_INSTALL_BINARIES_func() {
     bash $SCRIPT_DIR/tools/ceremonyclient_download.sh -f "$NODE_BINARY"
     bash $SCRIPT_DIR/tools/ceremonyclient_download.sh -f "$QCLIENT_BINARY"
+
+    return
 }
 
 # Build the service file, load it up
@@ -158,6 +168,8 @@ UPDATE_CLUSTER_FILE_func() {
     if [[ $CLUSTER == 1 ]]; then
         sed -i "s/NODE_BINARY\=[^<]*/$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
     fi
+
+    return
 }
 
 # Function to fill the correct 'Program' and 'ProgramArgs' sections of the macOS plist file,
@@ -192,6 +204,8 @@ PLIST_ARGS_func() {
         <string>$GOMAXPROCS</string>
     </dict>"
     fi
+
+    return
 }
 
 BUILD_MAC_LAUNCHCTL_PLIST_FILE_func() {
@@ -245,21 +259,23 @@ BUILD_MAC_LAUNCHCTL_PLIST_FILE_func() {
 </plist>
 EOF
 
-# Test service file
-PLUTIL_TEST=$(plutil -lint $PLIST_FILE)
-if [[ $PLUTIL_TEST == "$PLIST_FILE: OK" ]]; then
-    :
-else
-    echo "Error: plutil test on $PLIST_FILE file failed. Results below:"
-    echo "$PLUTIL_TEST"
-    exit 1
-fi
+    # Test service file
+    PLUTIL_TEST=$(plutil -lint $PLIST_FILE)
+    if [[ $PLUTIL_TEST == "$PLIST_FILE: OK" ]]; then
+        :
+    else
+        echo "Error: plutil test on $PLIST_FILE file failed. Results below:"
+        echo "$PLUTIL_TEST"
+        return 1
+    fi
 
-# Configure log rotation
-sudo tee /etc/newsyslog.d/$PLIST_LABEL.conf > /dev/null <<EOF
+    # Configure log rotation
+    sudo tee /etc/newsyslog.d/$PLIST_LABEL.conf > /dev/null <<EOF
 # logfilename [owner:group] mode count size when flags [/pid_file] [sig_num]
 $CEREMONYCLIENT_LOGFILE robbie:staff 644 3 1024 * JG
 EOF
+
+    return
 }
 
 SYSTEMCTL_SERVICE_FILE_ARGS_func() {
@@ -271,6 +287,8 @@ SYSTEMCTL_SERVICE_FILE_ARGS_func() {
         SYSTEMCTL_SERVICE_FILE_ARGS="ExecStart=$CEREMONYCLIENT_NODE_DIR/$NODE_BINARY
 Environment='GOMAXPROCS=1'"
     fi
+
+    return
 }
 
 BUILD_LINUX_SYSTEMCTL_SERVICE_FILE_func() {
@@ -300,6 +318,8 @@ TimeoutStopSec=30s
 [Install]
 WantedBy=multi-user.target
 EOF
+
+    return
 }
 
 ALTER_RELOAD_RESTART_DAEMONS_func() {
@@ -340,6 +360,8 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
         echo "---- End of logs print ----"
         echo ""
     fi
+
+    return
 }
 
 CONFIG_CHANGES_func() {
@@ -351,7 +373,7 @@ CONFIG_CHANGES_func() {
     # Set maxFrames (frame truncation) to 1001 frames, to save on disk space
     sudo sed -i -E 's|maxFrames: .*|maxFrames: 1001|' "$CEREMONYCLIENT_CONFIG_FILE"
 
-
+    return
 }
 
 FINISHING_TIPS_func() {
@@ -362,6 +384,8 @@ FINISHING_TIPS_func() {
     fi
     echo "To set up backups, "
     echo ""
+
+    return
 }
 
 # Instructions on setting up backups
@@ -449,7 +473,7 @@ FETCH_FILES_func() {
     if [[ -z "$RELEASE_FILES_AVAILABLE" ]]; then
         echo "Error: no release files relating to $FILE_PATTERN could be found."
         echo "This could be due to network issues."
-        exit 1
+        return 1
     fi
 
     for RELEASE_FILE in $RELEASE_FILES_AVAILABLE; do
@@ -457,6 +481,8 @@ FETCH_FILES_func() {
             echo "Downloaded and installed file: $RELEASE_FILE."
         fi
     done
+
+    return
 }
 
 
@@ -619,4 +645,4 @@ echo "Use \`tail -F $CEREMONYCLIENT_LOGFILE\` to view in real-time the output of
 echo "The logfile is rotated when it reaches 1GB in filesize, and 2 archives are kept. This will result in a total disk usage of 3GB by the logfile and archives."
 echo "If you want to add gRPC, you should wait about 20 minutes for the node to sync up, then run the gRPC script."
 
-exit 0
+exit

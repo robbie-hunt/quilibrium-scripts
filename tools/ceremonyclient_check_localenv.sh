@@ -43,7 +43,6 @@ CHECK_EXISTENCE_OF_LOCALENV_FILE_func() {
         fi
         return 1
     fi
-
     return 0
 }
 
@@ -82,7 +81,6 @@ CHECK_LOCAL_ENV_KEYS_VALUES_func() {
     else
         echo "$LOCALENV file checked successfully."
     fi
-    
     return 0
 }
 

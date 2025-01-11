@@ -51,8 +51,9 @@ PRINT_ARCH_func() {
     else
         echo "Error: couldn't match CPU arch '$RELEASE_ARCH' to a viable Quil CPU arch."
         echo "Please check this yourself by running \`uname -m | tr '[:upper:]' '[:lower:]'\`."
-        exit 1
+        return 1
     fi
+    return 0
 }
 
 # Function to print OS
@@ -65,8 +66,9 @@ PRINT_OS_func() {
     else
         echo "Error: couldn't match OS '$RELEASE_OS' to available OS's for Quil."
         echo "Please check this yourself by running \`uname -s | tr '[:upper:]' '[:lower:]'\`."
-        exit 1
+        return 1
     fi
+    return 0
 }
 
 RELEASE_OS=$(PRINT_OS_func)
@@ -77,6 +79,7 @@ RELEASE_ARCH=$(PRINT_ARCH_func)
 # I often need to get the OS and arch of the machine running scripts and combine them in this format to filter binaries
 PRINT_RELEASE_LINE_func() {
     echo "$RELEASE_OS-$RELEASE_ARCH"
+    return 0
 }
 
 RELEASE_LINE=$(PRINT_RELEASE_LINE_func)
@@ -101,6 +104,7 @@ PRINT_LOCAL_ENV_KEY_VALUE_func() {
 
     # Return the value
     echo "$VALUE"
+    return 0
 }
 
 # Initialise the .localenv file, to be filled in manually
@@ -120,6 +124,7 @@ node_release_url=https://releases.quilibrium.com/release
 qclient_release_url=https://releases.quilibrium.com/qclient-release
 EOF
     fi
+    return 0
 }
 
 # Find the latest version of either the qclient or node binary that is installed
@@ -135,6 +140,7 @@ LATEST_INSTALLED_VERSIONS_func() {
     # Take the first line (highest version)
     head -n 1 | \
     if [[ $FILES_REQUESTED = 0 ]]; then awk -F' ' '{print $1}'; else awk -F' ' '{print $2}'; fi
+    return 0
 }
 
 # Find the latest version of either the qclient or node binary that is available on quilibrium.com
@@ -151,6 +157,7 @@ LATEST_RELEASE_VERSIONS_func() {
     # Take the first line (highest version)
     head -n 1 | \
     if [[ $FILES_REQUESTED = 0 ]]; then awk -F' ' '{print $1}'; else awk -F' ' '{print $2}'; fi
+    return 0
 }
 
 # Master function to find the latest version of the requested files
@@ -245,6 +252,7 @@ LATEST_VERSIONS_func() {
             fi
         fi
     fi
+    return 0
 }
 
 
@@ -265,4 +273,4 @@ while :; do
     exit
 done
 
-exit 0
+exit
