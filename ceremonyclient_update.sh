@@ -8,7 +8,7 @@ USAGE_func() {
     echo ""
     echo "Updates the Quilibrium node binaries (including qclient) to latest versions, and restarts node daemons."
     echo ""
-    echo "USAGE: bash ceremonyclient_update.sh [-h] ] [-x] [-c]"
+    echo "USAGE: bash ceremonyclient_update.sh [-h] [-x] [-c]"
     echo ""
     echo "       -h    Display this help dialogue."
     echo "       -x    For debugging the script; sets the x shell builtin, 'set -x'."
@@ -47,9 +47,6 @@ COMPARE_VERSIONS_func() {
 
 # Update either the start_cluster script or the actual service file with the new node binary, depending on whether -c was used
 UPDATE_SERVICE_FILE_func() {
-    NEW_LATEST_NODE_FILE_INSTALLED_PATH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet')
-    NEW_LATEST_NODE_FILE_INSTALLED_FILENAME=$(echo "$NEW_LATEST_NODE_FILE_INSTALLED_PATH" | awk -F'/' '{print $NF}' | xargs)
-
     # If cluster, update start_cluster script
     if [[ $CLUSTER == 1 ]]; then
         sed -i "s/NODE_BINARY\=[^<]*/NODE_BINARY\=\'$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME\'/" ceremonyclient_start_cluster.sh
@@ -226,6 +223,9 @@ EOF
 }
 
 ALTER_RELOAD_RESTART_DAEMONS_func() {
+    NEW_LATEST_NODE_FILE_INSTALLED_PATH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet')
+    NEW_LATEST_NODE_FILE_INSTALLED_FILENAME=$(echo "$NEW_LATEST_NODE_FILE_INSTALLED_PATH" | awk -F'/' '{print $NF}' | xargs)
+
     # If macOS, then update launchctl plist file and restart service
     # Using launchctl commands 'bootout' and 'bootstrap' instead of the deprecated 'load' and 'unload' commands
     if [[ "$RELEASE_OS" == "darwin" ]]; then
@@ -282,7 +282,7 @@ CLUSTER_DATA_WORKER_COUNT=0
 # Supply a node directory using the -d flag
 DIRECTORY=0
 
-while getopts "xhqc:C:D:d" opt; do
+while getopts "xhqcC:D:d" opt; do
     case "$opt" in
         x) set -x;;
         h) USAGE_func; exit 0;;
