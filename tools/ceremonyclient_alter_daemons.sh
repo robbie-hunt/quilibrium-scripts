@@ -1,4 +1,4 @@
-# #!/bin/bash
+#!/bin/bash
 
 # Set shell options
 set -eou pipefail
@@ -6,16 +6,13 @@ set -eou pipefail
 
 USAGE_func() {
     echo ""
-    echo "Updates the Quilibrium node binaries (including qclient) to latest versions, and restarts node daemons."
+    echo "Tool to alter the daemon files of nodes on Debian (Linux) and macOS."
     echo ""
-    echo "USAGE: bash ceremonyclient_update.sh [-h] [-x] [-c]"
+    echo "USAGE: bash ceremonyclient_alter_daemons.sh [-h] [-x] [-q]"
     echo ""
     echo "       -h    Display this help dialogue."
     echo "       -x    For debugging the script; sets the x shell builtin, 'set -x'."
-    echo "       -c    This node is part of a cluster."
-    echo "             (By default this is set to null, meaning this node is run as a standalone node.)"
-    echo "       -d    (Optional) Directory to update binaries in."
-    echo "             By default, the directory for updates is determined by the 'ceremonyclient_node_dir' key in .localenv."
+    echo "       -q    Quiet mode."
     echo ""
     exit 0
 }
@@ -29,39 +26,6 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 SCRIPT_ROOT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print}' | sed 's/\/*$//')
-
-# Compare the currently installed binary with the latest available binary from release
-COMPARE_VERSIONS_func() {
-    local FILE_INSTALLED=$(echo $1 | awk -F'/' '{print $NF}' | xargs)
-    local FILE_INSTALLED_PATH="$1"
-    local FILE_RELEASE="$2"
-
-    if [[ "$FILE_INSTALLED" == "$FILE_RELEASE" ]]; then
-        echo "$FILE_INSTALLED file installed is the latest version, no need to update."
-    else
-        echo "Update required for $FILE_INSTALLED."
-        bash $SCRIPT_DIR/tools/ceremonyclient_download.sh -f "$FILE_RELEASE"
-    fi
-    return
-}
-
-# Update either the start_cluster script or the actual service file with the new node binary, depending on whether -c was used
-UPDATE_SERVICE_FILE_func() {
-    # If cluster, update start_cluster script
-    if [[ $CLUSTER == 1 ]]; then
-        sed -i "s/NODE_BINARY\=[^<]*/NODE_BINARY\=\'$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME\'/" ceremonyclient_start_cluster.sh
-    # If not cluster, then
-    else
-        # If macOS, update launchctl plist file
-        if [[ "$RELEASE_OS" == "darwin" ]]; then
-            sudo sed -i "s/node-[^<]*/node-$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" /Library/LaunchDaemons/local.ceremonyclient.plist
-        # If Linux, update systemctl service file
-        elif [[ "$RELEASE_OS" == "linux" ]]; then
-            sed -i "/^ExecStart\=.*/c ExecStart\=$NEW_LATEST_NODE_FILE_INSTALLED_PATH" /lib/systemd/system/ceremonyclient.service
-        fi
-    fi
-    return
-}
 
 # Function to update the start_cluster script
 UPDATE_CLUSTER_FILE_func() {
@@ -295,54 +259,5 @@ while getopts "xhqcC:D:d" opt; do
     esac
 done
 shift $((OPTIND -1))
-
-# Make sure that if -c is used, -C and -D are also supplied
-if [[ "$CLUSTER" == 1 ]]; then
-    if [[ "$CLUSTER_CORE_INDEX_START" == 0 || "$CLUSTER_DATA_WORKER_COUNT" == 0 ]]; then
-        echo "Error: when using -c to indicate that this node is being set up as part of a cluster,"
-        echo "please also use the [-C core index] and [-D number of data workers] flags."
-        exit 1
-    fi
-    :
-else
-    :
-fi
-
-# Make sure .localenv is in order; if not, exit
-if $(bash $SCRIPT_DIR/tools/ceremonyclient_check_localenv.sh -q); then
-    :
-else
-    bash $SCRIPT_DIR/tools/ceremonyclient_check_localenv.sh
-    exit 1
-fi
-
-# The OS of the machine running this script
-RELEASE_OS=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
-# The release line ('os-arch') of the machine running this script
-RELEASE_LINE=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -release-line)
-
-# For the ceremonyclient node directory
-# If a directory was supplied via the -d option, use it
-# Otherwise, use the directory in the .localenv
-if [[ $DIRECTORY == 0 ]]; then
-    CEREMONYCLIENT_NODE_DIR=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key "ceremonyclient_node_dir")
-else
-    CEREMONYCLIENT_NODE_DIR="$DIRECTORY"
-fi
-
-# Logfile location
-CEREMONYCLIENT_LOGFILE="$HOME/ceremonyclient.log"
-
-# Get the latest version of the main node and qclient binaries,
-# both installed and available in release
-LATEST_NODE_INSTALLED=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet')
-LATEST_NODE_RELEASE=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-release-files-quiet')
-LATEST_QCLIENT_INSTALLED=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'qclient-installed-files-quiet')
-LATEST_QCLIENT_RELEASE=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'qclient-release-files-quiet')
-
-COMPARE_VERSIONS_func "$LATEST_NODE_INSTALLED" "$LATEST_NODE_RELEASE"
-COMPARE_VERSIONS_func "$LATEST_QCLIENT_INSTALLED" "$LATEST_QCLIENT_RELEASE"
-
-ALTER_RELOAD_RESTART_DAEMONS_func
 
 exit

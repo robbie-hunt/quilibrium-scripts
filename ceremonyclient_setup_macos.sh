@@ -323,6 +323,9 @@ EOF
 }
 
 ALTER_RELOAD_RESTART_DAEMONS_func() {
+    NEW_LATEST_NODE_FILE_INSTALLED_PATH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet')
+    NEW_LATEST_NODE_FILE_INSTALLED_FILENAME=$(echo "$NEW_LATEST_NODE_FILE_INSTALLED_PATH" | awk -F'/' '{print $NF}' | xargs)
+
     # If macOS, then update launchctl plist file and restart service
     # Using launchctl commands 'bootout' and 'bootstrap' instead of the deprecated 'load' and 'unload' commands
     if [[ "$RELEASE_OS" == "darwin" ]]; then
@@ -339,8 +342,8 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
         launchctl kickstart -kp system/local.ceremonyclient
 
         # Let service sit for 60s, then print out the logfile
-        echo "ceremonyclient daemon updated and restarted. Waiting 5 mins before printing from the logfile ceremonyclient."
-        sleep 300
+        echo "ceremonyclient daemon updated and restarted. Waiting 2 minutes before printing from the logfile ceremonyclient."
+        sleep 120
         tail -200 "$CEREMONYCLIENT_LOGFILE"
         echo "---- End of logs print ----"
         echo ""
@@ -354,8 +357,8 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
         systemctl start ceremonyclient
 
         # Let service sit for 60s, then print out the logfile
-        echo "ceremonyclient service updated and reloaded. Waiting 5 mins before printing from the logfile ceremonyclient."
-        sleep 300
+        echo "ceremonyclient service updated and reloaded. Waiting 2 minutes before printing from the logfile ceremonyclient."
+        sleep 120
         journalctl --unit=ceremonyclient.service -n 200
         echo "---- End of logs print ----"
         echo ""

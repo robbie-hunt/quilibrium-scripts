@@ -1,5 +1,6 @@
 #!/bin/bash
-# start-cluster.sh
+
+set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
 
 # Gracefully exit node when script is stopped
 kill_process() {
@@ -10,6 +11,16 @@ kill_process() {
 
 trap kill_process SIGINT
 
+# Figure out what directory I'm in
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$SCRIPT_DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+SCRIPT_ROOT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print}' | sed 's/\/*$//')
+
 RELEASE_ARCH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -arch)
 RELEASE_OS=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
 RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
@@ -17,7 +28,7 @@ RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
 START_CORE_INDEX=1
 if [[ "$RELEASE_OS" == "darwin" ]]; then
     DATA_WORKER_COUNT=$(sysctl -n hw.logicalcpu)
-elif [[ "$RELEASE_OS" == "darwin" ]]; then
+elif [[ "$RELEASE_OS" == "linux" ]]; then
     DATA_WORKER_COUNT=$(nproc)
 fi
 PARENT_PID=$$
@@ -59,12 +70,9 @@ if ! [[ "$DATA_WORKER_COUNT" =~ ^[1-9][0-9]*$ ]]; then
     exit 1
 fi
 
-# Get the maximum number of CPU cores
-MAX_CORES=$(sysctl -n hw.logicalcpu)
-
 if [[ "$RELEASE_OS" == "darwin" ]]; then
     MAX_CORES=$(sysctl -n hw.logicalcpu)
-elif [[ "$RELEASE_OS" == "darwin" ]]; then
+elif [[ "$RELEASE_OS" == "linux" ]]; then
     MAX_CORES=$(nproc)
 fi
 
@@ -118,7 +126,7 @@ start_workers
 
 while true
 do
-  # we only care about restarting the master process because the cores should be alive 
+  # we only care about restarting the master process because the cores should be alive
   # as long as this file is running (and this will only run on the machine with a start index of 1)
   if [ $START_CORE_INDEX -eq 1 ] && ! is_master_process_running; then
     echo "Process crashed or stopped. restarting..."
