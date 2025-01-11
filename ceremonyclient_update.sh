@@ -52,12 +52,12 @@ UPDATE_SERVICE_FILE_func() {
 
     # If cluster, update start_cluster script
     if [[ $CLUSTER == 1 ]]; then
-        sed -i "s/NODE_BINARY\=[^<]*/$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
+        sed -i "s/NODE_BINARY\=[^<]*/NODE_BINARY\=\'$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME\'/" ceremonyclient_start_cluster.sh
     # If not cluster, then
     else
         # If macOS, update launchctl plist file
         if [[ "$RELEASE_OS" == "darwin" ]]; then
-            sudo sed -i "s/node-[^<]*/$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" /Library/LaunchDaemons/local.ceremonyclient.plist
+            sudo sed -i "s/node-[^<]*/node-$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" /Library/LaunchDaemons/local.ceremonyclient.plist
         # If Linux, update systemctl service file
         elif [[ "$RELEASE_OS" == "linux" ]]; then
             sed -i "/^ExecStart\=.*/c ExecStart\=$NEW_LATEST_NODE_FILE_INSTALLED_PATH" /lib/systemd/system/ceremonyclient.service
