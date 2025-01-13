@@ -51,11 +51,15 @@ LOCALENV="$SCRIPT_ROOT_DIR/.localenv"
 # If cluster, config cluster instructions
 # Instructions on setting up backups
 
-
-# Initialise a .localenv file
-INITIALISE_LOCALENV_func() {
-    bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -env-init
-
+# Check the .localenv file; if it doesn't exist, initialise one
+CHECK_LOCALENV_func() {
+    if [[ $(./tools/ceremonyclient_check_localenv.sh) ]]; then
+        echo "pass"
+    else
+        echo "not pass"
+#        bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -env-init
+    fi
+    exit
     return
 }
 
@@ -403,6 +407,9 @@ CLUSTER=0
 CLUSTER_CORE_INDEX_START=0
 CLUSTER_DATA_WORKER_COUNT=0
 
+# Supply a node directory using the -d flag
+DIRECTORY=0
+
 while getopts "xhqcC:D:" opt; do
     case "$opt" in
         x) set -x;;
@@ -431,7 +438,7 @@ fi
 # For the ceremonyclient node directory
 # If a directory was supplied via the -d option, use it
 # Otherwise, use the directory in the .localenv
-if [[ -z "$DIRECTORY" ]]; then
+if [[ $DIRECTORY == 0 ]]; then
     CEREMONYCLIENT_NODE_DIR=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key "ceremonyclient_node_dir")
 else
     CEREMONYCLIENT_NODE_DIR="$DIRECTORY"
