@@ -83,7 +83,10 @@ zstyle ':vcs_info:git:*' formats '%b '
 setopt PROMPT_SUBST
 PROMPT='%F{green}%n@%m%f %F{green}%*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f$ '
 
-# Quil nodes
+# Homebrew
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+# Quil nodes - GO
 export GOROOT=/usr/local/go
 export GOPATH=$HOME/go
 . "$HOME/.cargo/env"
@@ -119,6 +122,16 @@ EOF
     return
 }
 
+INSTALL_CURL_RUST_func() {
+    curl -s -S "$GOLANG_URL" --output go.tar.gz
+    tar -xvf go.tar.gz
+    mv go /usr/local
+    rm go.tar.gz
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.2.2+v0.25.0
+    go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+}
+
 INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func() {
     MAC_BREW_DEPENDANCIES="git gmp rsync rclone"
     LINUX_APT_DEPENDANCIES="git make build-essential libgmp-dev rsync rclone wget curl sudo"
@@ -133,13 +146,7 @@ INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func() {
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"   
         fi
         brew install "$MAC_BREW_DEPENDANCIES"
-        curl -s -S "$GOLANG_URL" --output go.tar.gz
-        tar -xvf go.tar.gz
-        mv go /usr/local
-        rm go.tar.gz
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-        cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.2.2+v0.25.0
-        go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+        INSTALL_CURL_RUST_func
 
         # Adjust zsh profile
         ALTER_MAC_ZSH_PROFILE_func
@@ -147,6 +154,7 @@ INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func() {
     elif [[ "$RELEASE_OS" == 'linux' ]]; then
         # Install dependancies
         apt install "$LINUX_APT_DEPENDANCIES"
+        INSTALL_CURL_RUST_func
 
         #  Adjust bash profile
         ALTER_LINUX_BASH_PROFILE_func
@@ -470,7 +478,18 @@ RELEASE_ARCH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -arch)
 RELEASE_OS=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
 RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
 
+CHECK_LOCALENV_func
 
+EXIT 0
+
+INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func
+DOWNLOAD_INSTALL_BINARIES_func
+ALTER_RELOAD_RESTART_DAEMONS_func
+CONFIG_CHANGES_func
+
+FINISHING_TIPS_func
+
+exit
 
 
 
