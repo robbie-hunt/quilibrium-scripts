@@ -127,7 +127,11 @@ INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func() {
     # If macOS then
     if [[ "$RELEASE_OS" == 'darwin' ]]; then
         # Install brew, dependancies, Golang, Rust, gRPC
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        if [[ $(brew help) ]]; then
+            :
+        else
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"   
+        fi
         brew install "$MAC_BREW_DEPENDANCIES"
         curl -s -S "$GOLANG_URL" --output go.tar.gz
         tar -xvf go.tar.gz
