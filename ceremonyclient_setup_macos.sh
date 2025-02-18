@@ -122,14 +122,17 @@ EOF
     return
 }
 
-INSTALL_CURL_RUST_func() {
+INSTALL_GO_RUST_GRPC_func() {
     curl -s -S "$GOLANG_URL" --output go.tar.gz
     tar -xvf go.tar.gz
     mv go /usr/local
     rm go.tar.gz
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-    cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.2.2+v0.25.0
-    go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+    if [[ $(rustc --version) ]]; then
+        :
+    else
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+        cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.2.2+v0.25.0
+    fi
 }
 
 ALTER_TERMINAL_PROFILES_INSTALL_DEPENDANCIES_func() {
@@ -148,8 +151,14 @@ ALTER_TERMINAL_PROFILES_INSTALL_DEPENDANCIES_func() {
         else
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"   
         fi
-        brew install "$MAC_BREW_DEPENDANCIES"
-        INSTALL_CURL_RUST_func
+        for MAC_BREW_DEPENDANCY in $MAC_BREW_DEPENDANCIES; do
+            if brew list -1 "$MAC_BREW_DEPENDANCY"; then
+                :
+            else
+                brew install "$MAC_BREW_DEPENDANCY"
+            fi
+        done
+        INSTALL_GO_RUST_GRPC_func
     # If Linux then
     elif [[ "$RELEASE_OS" == 'linux' ]]; then
         #  Adjust bash profile
@@ -157,7 +166,7 @@ ALTER_TERMINAL_PROFILES_INSTALL_DEPENDANCIES_func() {
 
         # Install dependancies
         apt install "$LINUX_APT_DEPENDANCIES"
-        INSTALL_CURL_RUST_func
+        INSTALL_GO_RUST_GRPC_func
     fi
 
     return
@@ -385,7 +394,7 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
 
 CONFIG_CHANGES_func() {
     # Enable gRPC
-    go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+    bash $SCRIPT_DIR/tools/ceremonyclient_grpc.sh -q -g
     bash $SCRIPT_DIR/tools/ceremonyclient_grpc.sh -q -l
     bash $SCRIPT_DIR/tools/ceremonyclient_grpc.sh -q -p
 
