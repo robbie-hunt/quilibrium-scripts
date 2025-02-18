@@ -32,7 +32,7 @@ LOCALENV="$SCRIPT_ROOT_DIR/.localenv"
 
 CHECK_EXISTENCE_OF_LOCALENV_FILE_func() {
     if [[ -f "$LOCALENV" ]]; then
-        :
+        return 0
     else
         if [[ "$QUIET" == 1 ]]; then
             :
@@ -43,7 +43,6 @@ CHECK_EXISTENCE_OF_LOCALENV_FILE_func() {
         fi
         return 1
     fi
-    return 0
 }
 
 CHECK_LOCAL_ENV_KEYS_VALUES_func() {
