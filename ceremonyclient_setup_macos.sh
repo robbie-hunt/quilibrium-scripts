@@ -439,6 +439,10 @@ while getopts "xhqcC:D:" opt; do
 done
 shift $((OPTIND -1))
 
+CHECK_LOCALENV_func
+
+exit
+
 # Make sure that if -c is used, -C and -D are also supplied
 if [[ "$CLUSTER" == 1 ]]; then
     if [[ "$CLUSTER_CORE_INDEX_START" == 0 || "$CLUSTER_DATA_WORKER_COUNT" == 0 ]]; then
@@ -481,10 +485,6 @@ QCLIENT_BINARY=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'q
 RELEASE_ARCH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -arch)
 RELEASE_OS=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
 RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
-
-CHECK_LOCALENV_func
-
-exit
 
 INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func
 
