@@ -481,9 +481,9 @@ RELEASE_ARCH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -arch)
 RELEASE_OS=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
 RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
 
-exit
-
 INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func
+
+exit
 
 DOWNLOAD_INSTALL_BINARIES_func
 ALTER_RELOAD_RESTART_DAEMONS_func
