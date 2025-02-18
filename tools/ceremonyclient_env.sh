@@ -115,7 +115,7 @@ INITIALISE_LOCAL_ENV_func() {
         return 1
     else
         touch "$LOCALENV"
-        sudo tee "$LOCALENV" > /dev/null <<EOF
+        tee "$LOCALENV" > /dev/null <<EOF
 ceremonyclient_root_dir=$HOME/ceremonyclient
 ceremonyclient_node_dir=$HOME/ceremonyclient/node
 ceremonyclient_config=$HOME/ceremonyclient/node/.config/config.yml
