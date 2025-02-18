@@ -71,7 +71,7 @@ CHECK_LOCALENV_func() {
 
 # ZSH is the default macOS terminal
 ALTER_MAC_ZSH_PROFILE_func() {
-    tee ~/.zshrc > /dev/null <<EOF
+    sudo tee ~/.zshrc > /dev/null <<EOF
 
 
 # Terminal display preferences
@@ -102,7 +102,7 @@ EOF
 
 # Bash is MY default Linux terminal - adjust this to preference
 ALTER_LINUX_BASHRC_PROFILE_func() {
-    tee ~/.bashrc > /dev/null <<EOF
+    sudo tee ~/.bashrc > /dev/null <<EOF
 
 
 # Terminal display preferences
