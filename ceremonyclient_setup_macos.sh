@@ -132,13 +132,16 @@ INSTALL_CURL_RUST_func() {
     go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
 }
 
-INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func() {
+ALTER_TERMINAL_PROFILES_INSTALL_DEPENDANCIES_func() {
     MAC_BREW_DEPENDANCIES="git gmp rsync rclone"
     LINUX_APT_DEPENDANCIES="git make build-essential libgmp-dev rsync rclone wget curl sudo"
     GOLANG_URL="https://go.dev/dl/go1.22.10.$RELEASE_OS-$RELEASE_ARCH.tar.gz"
 
     # If macOS then
     if [[ "$RELEASE_OS" == 'darwin' ]]; then
+        # Adjust zsh profile
+        ALTER_MAC_ZSH_PROFILE_func
+
         # Install brew, dependancies, Golang, Rust, gRPC
         if [[ $(brew help) ]]; then
             :
@@ -147,17 +150,14 @@ INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func() {
         fi
         brew install "$MAC_BREW_DEPENDANCIES"
         INSTALL_CURL_RUST_func
-
-        # Adjust zsh profile
-        ALTER_MAC_ZSH_PROFILE_func
     # If Linux then
     elif [[ "$RELEASE_OS" == 'linux' ]]; then
+        #  Adjust bash profile
+        ALTER_LINUX_BASH_PROFILE_func
+
         # Install dependancies
         apt install "$LINUX_APT_DEPENDANCIES"
         INSTALL_CURL_RUST_func
-
-        #  Adjust bash profile
-        ALTER_LINUX_BASH_PROFILE_func
     fi
 
     return
@@ -481,7 +481,7 @@ RELEASE_ARCH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -arch)
 RELEASE_OS=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
 RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
 
-INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func
+ALTER_TERMINAL_PROFILES_INSTALL_DEPENDANCIES_func
 
 exit
 
