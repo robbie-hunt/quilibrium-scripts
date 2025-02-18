@@ -89,10 +89,10 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 # Quil nodes - GO
 export GOROOT=/usr/local/go
 export GOPATH=$HOME/go
-. "$HOME/.cargo/env"
 export GO111MODULE=on
 export GOPROXY=https://goproxy.cn,direct
 export PATH=$PATH:/usr/local/go/bin
+. "$HOME/.cargo/env"
 EOF
 
     . ~/.zshrc
@@ -122,11 +122,23 @@ EOF
     return
 }
 
-INSTALL_GO_RUST_GRPC_func() {
+INSTALL_GO_RUST_func() {
     curl -s -S "$GOLANG_URL" --output go.tar.gz
     tar -xvf go.tar.gz
     mv go /usr/local
     rm go.tar.gz
+    # Get Go commands working
+    tee ~/.bashrc > /dev/null <<EOF
+# Quil nodes - GO
+export GOROOT=/usr/local/go
+export GOPATH=$HOME/go
+. "$HOME/.cargo/env"
+export GO111MODULE=on
+export GOPROXY=https://goproxy.cn,direct
+export PATH=$PATH:/usr/local/go/bin
+EOF
+    . ~/.zshrc
+
     if [[ $(rustc --version) ]]; then
         :
     else
@@ -142,14 +154,17 @@ ALTER_TERMINAL_PROFILES_INSTALL_DEPENDANCIES_func() {
 
     # If macOS then
     if [[ "$RELEASE_OS" == 'darwin' ]]; then
-        # Adjust zsh profile
-        ALTER_MAC_ZSH_PROFILE_func
-
-        # Install brew, dependancies, Golang, Rust, gRPC
+        # Install brew and brew packages
         if [[ $(brew help) ]]; then
             :
         else
-            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"   
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"  
+            # Get homebrew commands working
+            tee ~/.bashrc > /dev/null <<EOF
+# Homebrew
+eval "$(/opt/homebrew/bin/brew shellenv)"
+EOF
+            . ~/.zshrc
         fi
         for MAC_BREW_DEPENDANCY in $MAC_BREW_DEPENDANCIES; do
             if brew list -1 "$MAC_BREW_DEPENDANCY"; then
@@ -158,7 +173,49 @@ ALTER_TERMINAL_PROFILES_INSTALL_DEPENDANCIES_func() {
                 brew install "$MAC_BREW_DEPENDANCY"
             fi
         done
-        INSTALL_GO_RUST_GRPC_func
+        # Get git colours working in terminal
+        tee -a ~/.bashrc > /dev/null <<EOF
+
+# Terminal display preferences
+autoload -Uz vcs_info
+precmd() { vcs_info }
+
+zstyle ':vcs_info:git:*' formats '%b '
+
+setopt PROMPT_SUBST
+PROMPT='%F{green}%n@%m%f %F{green}%*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f$ '
+EOF
+        . ~/.zshrc
+
+        # Install Go
+        curl -s -S "$GOLANG_URL" --output go.tar.gz
+        tar -xvf go.tar.gz
+        mv go /usr/local
+        rm go.tar.gz
+        # Get Go commands working
+        tee -a ~/.bashrc > /dev/null <<EOF
+
+# Quil nodes - GO
+export GOROOT=/usr/local/go
+export GOPATH=$HOME/go
+export GO111MODULE=on
+export GOPROXY=https://goproxy.cn,direct
+export PATH=$PATH:/usr/local/go/bin
+EOF
+        . ~/.zshrc
+
+        # Install Rust
+        if [[ $(rustc --version) ]]; then
+            :
+        else
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+            tee -a ~/.bashrc > /dev/null <<EOF
+
+. "$HOME/.cargo/env"
+EOF
+            . ~/.zshrc
+            cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.2.2+v0.25.0
+        fi
     # If Linux then
     elif [[ "$RELEASE_OS" == 'linux' ]]; then
         #  Adjust bash profile
@@ -166,7 +223,7 @@ ALTER_TERMINAL_PROFILES_INSTALL_DEPENDANCIES_func() {
 
         # Install dependancies
         apt install "$LINUX_APT_DEPENDANCIES"
-        INSTALL_GO_RUST_GRPC_func
+        INSTALL_GO_RUST_func
     fi
 
     return
