@@ -154,13 +154,14 @@ ALTER_TERMINAL_PROFILES_INSTALL_DEPENDANCIES_func() {
 
     # If macOS then
     if [[ "$RELEASE_OS" == 'darwin' ]]; then
+        touch 
         # Install brew and brew packages
         if [[ $(brew help) ]]; then
             :
         else
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"  
             # Get homebrew commands working
-            tee ~/.bashrc > /dev/null <<EOF
+            tee ~/.zshrc > /dev/null <<EOF
 # Homebrew
 eval "$(/opt/homebrew/bin/brew shellenv)"
 EOF
@@ -174,7 +175,7 @@ EOF
             fi
         done
         # Get git colours working in terminal
-        tee -a ~/.bashrc > /dev/null <<EOF
+        tee -a ~/.zshrc > /dev/null <<EOF
 
 # Terminal display preferences
 autoload -Uz vcs_info
@@ -193,7 +194,7 @@ EOF
         mv go /usr/local
         rm go.tar.gz
         # Get Go commands working
-        tee -a ~/.bashrc > /dev/null <<EOF
+        tee -a ~/.zshrc > /dev/null <<EOF
 
 # Quil nodes - GO
 export GOROOT=/usr/local/go
@@ -209,7 +210,7 @@ EOF
             :
         else
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-            tee -a ~/.bashrc > /dev/null <<EOF
+            tee -a ~/.zshrc > /dev/null <<EOF
 
 . "$HOME/.cargo/env"
 EOF
