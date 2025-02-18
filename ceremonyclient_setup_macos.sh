@@ -8,11 +8,13 @@ USAGE_func() {
     echo ""
     echo "Sets up a Quilibrium node on this machine."
     echo ""
-    echo "USAGE: bash ceremonyclient_setup.sh [-h] [-x] [-q] [-c] [-C core index start] [-D data worker count]"
+    echo "USAGE: bash ceremonyclient_setup.sh [-h] [-x] [-q] [-d directory] [-c] [-C core index start] [-D data worker count]"
     echo ""
     echo "       -h    Display this help dialogue."
     echo "       -x    For debugging the script; sets the x shell builtin, 'set -x'."
     echo "       -q    Quiet mode."
+    echo "       -d    Directory to install node to."
+    echo "             By default, this will be gotten from the ceremonyclient_env.sh tool at the beginning of this script."
     echo "       -c    This node is being set up as part of a cluster."
     echo "             (By default this is set to null, meaning this node is run as a standalone node.)"
     echo "       -C    Cluster core index start."
@@ -429,6 +431,7 @@ while getopts "xhqcC:D:" opt; do
         h) USAGE_func; exit 0;;
         q) QUIET=1;;
         c) CLUSTER=1;;
+        d) DIRECTORY="$OPTARG";;
         C) CLUSTER_CORE_INDEX_START="$OPTARG";;
         D) CLUSTER_DATA_WORKER_COUNT="$OPTARG";;
         *) USAGE_func; exit 0;;
