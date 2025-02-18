@@ -56,13 +56,10 @@ LOCALENV="$SCRIPT_ROOT_DIR/.localenv"
 
 # Check the .localenv file; if it doesn't exist, initialise one
 CHECK_LOCALENV_func() {
-    if ./tools/ceremonyclient_check_localenv.sh; then
-        echo $?
+    if ./tools/ceremonyclient_check_localenv.sh -q; then
         :
     else
-        echo $?
         bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -env-init
-        echo $?
     fi
 }
 
