@@ -154,7 +154,6 @@ ALTER_TERMINAL_PROFILES_INSTALL_DEPENDANCIES_func() {
 
     # If macOS then
     if [[ "$RELEASE_OS" == 'darwin' ]]; then
-        touch 
         # Install brew and brew packages
         if [[ $(brew help) ]]; then
             :
