@@ -60,6 +60,7 @@ CHECK_LOCALENV_func() {
         :
     else
         bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -env-init
+        echo $?
     fi
 }
 
@@ -437,7 +438,7 @@ done
 shift $((OPTIND -1))
 
 CHECK_LOCALENV_func
-
+echo $?
 exit
 
 # Make sure that if -c is used, -C and -D are also supplied
