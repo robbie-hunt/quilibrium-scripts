@@ -60,7 +60,6 @@ CHECK_LOCALENV_func() {
         :
     else
         bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -env-init
-        echo $?
     fi
 }
 
@@ -438,8 +437,6 @@ done
 shift $((OPTIND -1))
 
 CHECK_LOCALENV_func
-echo $?
-exit
 
 # Make sure that if -c is used, -C and -D are also supplied
 if [[ "$CLUSTER" == 1 ]]; then
@@ -483,6 +480,8 @@ QCLIENT_BINARY=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'q
 RELEASE_ARCH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -arch)
 RELEASE_OS=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
 RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
+
+exit
 
 INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func
 
