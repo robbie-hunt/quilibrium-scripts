@@ -97,6 +97,8 @@ while getopts "xhq" opt; do
 done
 shift $((OPTIND -1))
 
-CHECK_EXISTENCE_OF_LOCALENV_FILE_func
+if CHECK_EXISTENCE_OF_LOCALENV_FILE_func; then
+    :
+fi
 
 exit
