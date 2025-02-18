@@ -97,15 +97,6 @@ while getopts "xhq" opt; do
 done
 shift $((OPTIND -1))
 
-if [[ CHECK_EXISTENCE_OF_LOCALENV_FILE_func ]]; then
-    :
-else
-    exit
-fi
-if [[ $(CHECK_LOCAL_ENV_KEYS_VALUES_func) ]]; then
-    :
-else
-    exit
-fi
+CHECK_EXISTENCE_OF_LOCALENV_FILE_func
 
 exit
