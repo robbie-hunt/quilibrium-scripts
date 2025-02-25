@@ -177,8 +177,8 @@ EOF
         done
 
         # Install Go
-        curl -s -S "$GOLANG_URL" --output go.tar.gz
-        tar -xvzf go.tar.gz
+        curl -s -S -OL "$GOLANG_URL" --output go.tar.gz
+        tar -f go.tar.gz -xvz
         mv go /usr/local
         rm go.tar.gz
         # Get Go commands working
