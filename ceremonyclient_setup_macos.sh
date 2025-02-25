@@ -162,8 +162,11 @@ ALTER_TERMINAL_PROFILES_INSTALL_DEPENDANCIES_func() {
             # Get homebrew commands working
             tee -a ~/.zshrc > /dev/null <<EOF
 
+
 # Homebrew
 eval "$(/opt/homebrew/bin/brew shellenv)"
+
+
 
 EOF
             . ~/.zshrc
@@ -189,6 +192,9 @@ export GOPATH=$HOME/go
 export GO111MODULE=on
 export GOPROXY=https://goproxy.cn,direct
 export PATH=$PATH:/usr/local/go/bin
+
+
+
 EOF
 
         . ~/.zshrc
@@ -202,6 +208,8 @@ EOF
 # Rust
 . "$HOME/.cargo/env"
 
+
+
 EOF
 
             . ~/.zshrc
@@ -209,6 +217,7 @@ EOF
         fi
 
         # Adjust terminal profile for better readability
+        echo "Copy the following to your"
         tee -a ~/.zshrc > /dev/null <<EOF
 # Terminal display preferences
 autoload -Uz vcs_info
@@ -218,7 +227,6 @@ zstyle ':vcs_info:git:*' formats '%b '
 
 setopt PROMPT_SUBST
 PROMPT='%F{green}%n@%m%f %F{green}%*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f$ '
-
 EOF
         . ~/.zshrc
     # If Linux then
@@ -468,6 +476,17 @@ CONFIG_CHANGES_func() {
 
 FINISHING_TIPS_func() {
     echo ""
+    if [[ "$RELEASE_OS" == 'darwin' ]]; then
+        echo "For better readability in your terminal profile, copy the following to your ~/.zshrc file:"
+        echo "# Terminal display preferences \
+autoload -Uz vcs_info \
+precmd() { vcs_info } \
+zstyle ':vcs_info:git:*' formats '%b ' \
+setopt PROMPT_SUBST \
+PROMPT='%F{green}%n@%m%f %F{green}%*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f$ '"
+    elif [[ "$RELEASE_OS" == 'linux' ]]; then
+        echo "For better readability in your terminal profile, copy the following to your ~/.bashrc file:"
+    fi
     if [[ $CLUSTER == 1 ]]; then
         echo "Make sure to configure the 'dataWorkersMultiaddrs' section of 'engine' in $CEREMONYCLIENT_CONFIG,"
         echo "and that this section is the same ON ALL MACHINES in order for this node to function as part of the cluster."
