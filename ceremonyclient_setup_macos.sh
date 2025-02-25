@@ -196,7 +196,6 @@ export PATH=$PATH:/usr/local/go/bin
 
 
 EOF
-
         . ~/.zshrc
 
         # Install Rust
@@ -211,24 +210,9 @@ EOF
 
 
 EOF
-
             . ~/.zshrc
             cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.2.2+v0.25.0
         fi
-
-        # Adjust terminal profile for better readability
-        echo "Copy the following to your"
-        tee -a ~/.zshrc > /dev/null <<EOF
-# Terminal display preferences
-autoload -Uz vcs_info
-precmd() { vcs_info }
-
-zstyle ':vcs_info:git:*' formats '%b '
-
-setopt PROMPT_SUBST
-PROMPT='%F{green}%n@%m%f %F{green}%*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f$ '
-EOF
-        . ~/.zshrc
     # If Linux then
     elif [[ "$RELEASE_OS" == 'linux' ]]; then
         #  Adjust bash profile
