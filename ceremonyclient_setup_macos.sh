@@ -163,6 +163,7 @@ ALTER_TERMINAL_PROFILES_INSTALL_DEPENDANCIES_func() {
             tee ~/.zshrc > /dev/null <<EOF
 # Homebrew
 eval "$(/opt/homebrew/bin/brew shellenv)"
+
 EOF
             . ~/.zshrc
         fi
@@ -173,19 +174,6 @@ EOF
                 brew install "$MAC_BREW_DEPENDANCY"
             fi
         done
-        # Get git colours working in terminal
-        tee -a ~/.zshrc > /dev/null <<EOF
-
-# Terminal display preferences
-autoload -Uz vcs_info
-precmd() { vcs_info }
-
-zstyle ':vcs_info:git:*' formats '%b '
-
-setopt PROMPT_SUBST
-PROMPT='%F{green}%n@%m%f %F{green}%*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f$ '
-EOF
-        . ~/.zshrc
 
         # Install Go
         curl -s -S "$GOLANG_URL" --output go.tar.gz
@@ -194,14 +182,14 @@ EOF
         rm go.tar.gz
         # Get Go commands working
         tee -a ~/.zshrc > /dev/null <<EOF
-
-# Quil nodes - GO
+# Golang
 export GOROOT=/usr/local/go
 export GOPATH=$HOME/go
 export GO111MODULE=on
 export GOPROXY=https://goproxy.cn,direct
 export PATH=$PATH:/usr/local/go/bin
 EOF
+
         . ~/.zshrc
 
         # Install Rust
@@ -210,12 +198,28 @@ EOF
         else
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
             tee -a ~/.zshrc > /dev/null <<EOF
-
+# Rust
 . "$HOME/.cargo/env"
+
 EOF
+
             . ~/.zshrc
             cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.2.2+v0.25.0
         fi
+
+        # Adjust terminal profile for better readability
+        tee -a ~/.zshrc > /dev/null <<EOF
+# Terminal display preferences
+autoload -Uz vcs_info
+precmd() { vcs_info }
+
+zstyle ':vcs_info:git:*' formats '%b '
+
+setopt PROMPT_SUBST
+PROMPT='%F{green}%n@%m%f %F{green}%*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f$ '
+
+EOF
+        . ~/.zshrc
     # If Linux then
     elif [[ "$RELEASE_OS" == 'linux' ]]; then
         #  Adjust bash profile
