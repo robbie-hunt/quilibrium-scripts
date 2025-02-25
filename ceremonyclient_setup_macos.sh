@@ -160,7 +160,8 @@ ALTER_TERMINAL_PROFILES_INSTALL_DEPENDANCIES_func() {
         else
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"  
             # Get homebrew commands working
-            tee ~/.zshrc > /dev/null <<EOF
+            tee -a ~/.zshrc > /dev/null <<EOF
+
 # Homebrew
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
