@@ -69,90 +69,7 @@ CHECK_LOCALENV_func() {
     # Install Go, Rust, gRPC
     # Set up bashrc/zshrc with Go and Rust
 
-# ZSH is the default macOS terminal
-ALTER_MAC_ZSH_PROFILE_func() {
-    sudo tee ~/.zshrc > /dev/null <<EOF
-
-
-# Terminal display preferences
-autoload -Uz vcs_info
-precmd() { vcs_info }
-
-zstyle ':vcs_info:git:*' formats '%b '
-
-setopt PROMPT_SUBST
-PROMPT='%F{green}%n@%m%f %F{green}%*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f$ '
-
-# Homebrew
-eval "$(/opt/homebrew/bin/brew shellenv)"
-
-# Quil nodes - GO
-export GOROOT=/usr/local/go
-export GOPATH=$HOME/go
-export GO111MODULE=on
-export GOPROXY=https://goproxy.cn,direct
-export PATH=$PATH:/usr/local/go/bin
-. "$HOME/.cargo/env"
-EOF
-
-    . ~/.zshrc
-
-    return
-}
-
-# Bash is MY default Linux terminal - adjust this to preference
-ALTER_LINUX_BASHRC_PROFILE_func() {
-    sudo tee ~/.bashrc > /dev/null <<EOF
-
-
-# Terminal display preferences
-PS1='${debian_chroot:+($debian_chroot)}\[\033[0;32m\]\u@\h\[\033[00m\] \[\033[0;32m\]\D{%H:%M:%S}\[\033[00m\] \[\033[0;34m\]\w\[\033[00m\] $ '
-
-# Quil nodes
-GOROOT=/usr/local/go
-GOPATH=$HOME/go
-GO111MODULE=on
-GOPROXY=https://goproxy.cn,direct
-PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-. "$HOME/.cargo/env"
-EOF
-    
-    . ~/.bashrc
-
-    return
-}
-
-INSTALL_GO_RUST_func() {
-    curl -s -S "$GOLANG_URL" --output go.tar.gz
-    tar -xvf go.tar.gz
-    mv go /usr/local
-    rm go.tar.gz
-    # Get Go commands working
-    tee ~/.bashrc > /dev/null <<EOF
-# Quil nodes - GO
-export GOROOT=/usr/local/go
-export GOPATH=$HOME/go
-. "$HOME/.cargo/env"
-export GO111MODULE=on
-export GOPROXY=https://goproxy.cn,direct
-export PATH=$PATH:/usr/local/go/bin
-EOF
-    . ~/.zshrc
-
-    if [[ $(rustc --version) ]]; then
-        :
-    else
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-        cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.2.2+v0.25.0
-    fi
-}
-
-ALTER_TERMINAL_PROFILES_INSTALL_DEPENDANCIES_func() {
-    MAC_BREW_DEPENDANCIES="git gmp rsync rclone"
-    LINUX_APT_DEPENDANCIES="git make build-essential libgmp-dev rsync rclone wget curl sudo"
-    GOLANG_URL="https://go.dev/dl/go1.22.12.$RELEASE_OS-$RELEASE_ARCH.tar.gz"
-
-    # If macOS then
+INSTALL_DEPENDANCIES_func() {
     if [[ "$RELEASE_OS" == 'darwin' ]]; then
         # Install brew and brew packages
         if [[ $(brew help) ]]; then
@@ -161,7 +78,6 @@ ALTER_TERMINAL_PROFILES_INSTALL_DEPENDANCIES_func() {
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"  
             # Get homebrew commands working
             tee -a ~/.zshrc > /dev/null <<EOF
-
 
 # Homebrew
 eval "$(/opt/homebrew/bin/brew shellenv)"
@@ -178,14 +94,26 @@ EOF
                 brew install "$MAC_BREW_DEPENDANCY"
             fi
         done
+    elif [[ "$RELEASE_OS" == 'linux' ]]; then
+        apt install "$LINUX_APT_DEPENDANCIES"
+    fi
+}
 
-        # Install Go
-        curl -s -S -L "$GOLANG_URL" -o go.tar.gz
-        tar -f go.tar.gz -xvz
-        sudo mv go /usr/local/go
-        rm go.tar.gz
-        # Get Go commands working
-        tee -a ~/.zshrc > /dev/null <<EOF
+INSTALL_GO_RUST_func() {
+    if [[ "$RELEASE_OS" == 'darwin' ]]; then
+        TERMINAL_PROFILE_FILE='~/.zshrc'
+    elif [[ "$RELEASE_OS" == 'linux' ]]; then
+        TERMINAL_PROFILE_FILE='~/.bashrc'
+    fi
+
+    # Install Go
+    curl -s -S -L "$GOLANG_URL" -o go.tar.gz
+    tar -f go.tar.gz -xvz
+    sudo mv go /usr/local/go
+    rm go.tar.gz
+    # Alter terminal profile for Go
+    tee -a $TERMINAL_PROFILE_FILE > /dev/null <<EOF
+
 # Golang
 export GOROOT=/usr/local/go
 export GOPATH=$HOME/go
@@ -196,32 +124,34 @@ export PATH=$PATH:/usr/local/go/bin
 
 
 EOF
-        . ~/.zshrc
+    . $TERMINAL_PROFILE_FILE
 
-        # Install Rust
-        if [[ $(rustc --version) ]]; then
-            :
-        else
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-            tee -a ~/.zshrc > /dev/null <<EOF
+    # Install Rust
+    if [[ $(rustc --version) ]]; then
+        :
+    else
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+        # Alter terminal profile for Rust
+        tee -a $TERMINAL_PROFILE_FILE > /dev/null <<EOF
+
 # Rust
 . "$HOME/.cargo/env"
 
 
 
 EOF
-            . ~/.zshrc
-            cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.2.2+v0.25.0
-        fi
-    # If Linux then
-    elif [[ "$RELEASE_OS" == 'linux' ]]; then
-        #  Adjust bash profile
-        ALTER_LINUX_BASH_PROFILE_func
-
-        # Install dependancies
-        apt install "$LINUX_APT_DEPENDANCIES"
-        INSTALL_GO_RUST_func
+        . $TERMINAL_PROFILE_FILE
+        cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.2.2+v0.25.0
     fi
+}
+
+INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func() {
+    MAC_BREW_DEPENDANCIES="git gmp rsync rclone"
+    LINUX_APT_DEPENDANCIES="git make build-essential libgmp-dev rsync rclone wget curl sudo"
+    GOLANG_URL="https://go.dev/dl/go1.22.12.$RELEASE_OS-$RELEASE_ARCH.tar.gz"
+
+    INSTALL_DEPENDANCIES_func
+    INSTALL_GO_RUST_func
 
     return
 }
@@ -470,6 +400,8 @@ FINISHING_TIPS_func() {
         echo "PROMPT='%F{green}%n@%m%f %F{green}%*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f$ '"
     elif [[ "$RELEASE_OS" == 'linux' ]]; then
         echo "For better readability in your terminal profile, copy the following to your ~/.bashrc file:"
+        echo "# Terminal display preferences"
+        echo "PS1='${debian_chroot:+($debian_chroot)}\[\033[0;32m\]\u@\h\[\033[00m\] \[\033[0;32m\]\D{%H:%M:%S}\[\033[00m\] \[\033[0;34m\]\w\[\033[00m\] $ '"
     fi
     if [[ $CLUSTER == 1 ]]; then
         echo "Make sure to configure the 'dataWorkersMultiaddrs' section of 'engine' in $CEREMONYCLIENT_CONFIG,"
@@ -555,7 +487,7 @@ RELEASE_ARCH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -arch)
 RELEASE_OS=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
 RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
 
-ALTER_TERMINAL_PROFILES_INSTALL_DEPENDANCIES_func
+INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func
 
 exit
 
