@@ -101,9 +101,9 @@ EOF
 
 INSTALL_GO_RUST_func() {
     if [[ "$RELEASE_OS" == 'darwin' ]]; then
-        TERMINAL_PROFILE_FILE='~/.zshrc'
+        TERMINAL_PROFILE_FILE=~/.zshrc
     elif [[ "$RELEASE_OS" == 'linux' ]]; then
-        TERMINAL_PROFILE_FILE='~/.bashrc'
+        TERMINAL_PROFILE_FILE=~/.bashrc
     fi
 
     # Install Go
