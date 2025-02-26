@@ -150,7 +150,7 @@ EOF
 ALTER_TERMINAL_PROFILES_INSTALL_DEPENDANCIES_func() {
     MAC_BREW_DEPENDANCIES="git gmp rsync rclone"
     LINUX_APT_DEPENDANCIES="git make build-essential libgmp-dev rsync rclone wget curl sudo"
-    GOLANG_URL="https://go.dev/dl/go1.22.10.$RELEASE_OS-$RELEASE_ARCH.tar.gz"
+    GOLANG_URL="https://go.dev/dl/go1.22.12.$RELEASE_OS-$RELEASE_ARCH.tar.gz"
 
     # If macOS then
     if [[ "$RELEASE_OS" == 'darwin' ]]; then
@@ -462,12 +462,12 @@ FINISHING_TIPS_func() {
     echo ""
     if [[ "$RELEASE_OS" == 'darwin' ]]; then
         echo "For better readability in your terminal profile, copy the following to your ~/.zshrc file:"
-        echo "# Terminal display preferences \
-autoload -Uz vcs_info \
-precmd() { vcs_info } \
-zstyle ':vcs_info:git:*' formats '%b ' \
-setopt PROMPT_SUBST \
-PROMPT='%F{green}%n@%m%f %F{green}%*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f$ '"
+        echo "# Terminal display preferences"
+        echo "autoload -Uz vcs_info"
+        echo "precmd() { vcs_info }"
+        echo "zstyle ':vcs_info:git:*' formats '%b '"
+        echo "setopt PROMPT_SUBST"
+        echo "PROMPT='%F{green}%n@%m%f %F{green}%*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f$ '"
     elif [[ "$RELEASE_OS" == 'linux' ]]; then
         echo "For better readability in your terminal profile, copy the following to your ~/.bashrc file:"
     fi
