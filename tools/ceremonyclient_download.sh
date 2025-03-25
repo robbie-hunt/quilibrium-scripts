@@ -162,9 +162,14 @@ fi
 if [[ -d "$CEREMONYCLIENT_NODE_DIR" && -G "$CEREMONYCLIENT_NODE_DIR" ]]; then
     :
 else
-    echo "Error: $CEREMONYCLIENT_NODE_DIR cannot be used for the install of binaries."
-    echo "Directory either does not exist, or is not usable by this user."
-    exit 1
+    mkdir "$CEREMONYCLIENT_NODE_DIR"
+    if [[ -d "$CEREMONYCLIENT_NODE_DIR" && -G "$CEREMONYCLIENT_NODE_DIR" ]]; then
+        :
+    else
+        echo "Error: $CEREMONYCLIENT_NODE_DIR cannot be used for the install of binaries."
+        echo "Directory either does not exist, or is not usable by this user."
+        exit 1
+    fi
 fi
 
 # Type of binaries - node or qclient
