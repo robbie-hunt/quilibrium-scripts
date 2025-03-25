@@ -175,7 +175,7 @@ SETUP_STATS_COLLECTION_func() {
 
 
 
-while getopts "xhqlpLP" opt; do
+while getopts "xhqglp" opt; do
     case "$opt" in
         x) set -x;;
         h) USAGE_func;;
