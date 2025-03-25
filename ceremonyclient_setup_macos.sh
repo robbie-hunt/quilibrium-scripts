@@ -203,7 +203,9 @@ PLIST_ARGS_func() {
         PLIST_ARGS="<key>Program</key>
     <string>$CEREMONYCLIENT_NODE_DIR/$NODE_BINARY</string>
     <key>ProgramArguments</key>
-    <string>$CEREMONYCLIENT_NODE_DIR/$NODE_BINARY</string>
+    <array>
+        <string>$CEREMONYCLIENT_NODE_DIR/$NODE_BINARY</string>
+    </array>
     
     <key>WorkingDirectory</key>
     <string>$CEREMONYCLIENT_NODE_DIR</string>
