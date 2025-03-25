@@ -100,12 +100,14 @@ CONFIRM_NEW_BINARIES_func() {
     NEW_LATEST_FILE_INSTALLED_FILENAME=$(echo "$NEW_LATEST_FILE_INSTALLED_PATH" | awk -F'/' '{print $NF}' | xargs)
     NEW_LATEST_FILES=$(find "$CEREMONYCLIENT_NODE_DIR" -type f -name "$NEW_LATEST_FILE_INSTALLED_FILENAME*")
 
+    TYPE_CAPITALISED=$(echo "$TYPE" | awk '{ print toupper(substr($0,1,1)) substr($0,2) }')
+
     if [[ "$NEW_LATEST_FILE_INSTALLED_FILENAME" == "$LATEST_VERSION_RELEASED" ]]; then
         if CHECK_FILESIZES_MAKE_EXECUTABLE_func "$NEW_LATEST_FILES"; then
             if [[ "$QUIET" == 1 ]]; then
                 :
             else
-                echo "${(C)TYPE} binaries installed successfully."
+                echo "$TYPE_CAPITALISED binaries installed successfully."
             fi
         else
             if [[ "$QUIET" == 1 ]]; then
