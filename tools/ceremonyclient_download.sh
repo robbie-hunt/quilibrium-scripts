@@ -162,7 +162,7 @@ fi
 if [[ -d "$CEREMONYCLIENT_NODE_DIR" && -G "$CEREMONYCLIENT_NODE_DIR" ]]; then
     :
 else
-    mkdir "$CEREMONYCLIENT_NODE_DIR"
+    mkdir -p "$CEREMONYCLIENT_NODE_DIR"
     if [[ -d "$CEREMONYCLIENT_NODE_DIR" && -G "$CEREMONYCLIENT_NODE_DIR" ]]; then
         :
     else
