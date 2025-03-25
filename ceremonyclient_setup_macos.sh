@@ -381,9 +381,9 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
 
 CONFIG_CHANGES_func() {
     # Enable gRPC
-    bash $SCRIPT_DIR/tools/ceremonyclient_grpc.sh -q -g
-    bash $SCRIPT_DIR/tools/ceremonyclient_grpc.sh -q -l
-    bash $SCRIPT_DIR/tools/ceremonyclient_grpc.sh -q -p
+    bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -g
+    bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -l
+    bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -p
 
     # Set maxFrames (frame truncation) to 1001 frames, to save on disk space
     sudo sed -i -E 's|maxFrames: .*|maxFrames: 1001|' "$CEREMONYCLIENT_CONFIG_FILE"
