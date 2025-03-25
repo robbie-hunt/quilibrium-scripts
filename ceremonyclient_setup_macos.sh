@@ -72,7 +72,7 @@ CHECK_LOCALENV_func() {
 INSTALL_DEPENDANCIES_func() {
     if [[ "$RELEASE_OS" == 'darwin' ]]; then
         # Install brew and brew packages
-        if [[ $(brew help) ]]; then
+        if [[ $(brew --version) ]]; then
             :
         else
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"  
@@ -109,7 +109,7 @@ INSTALL_GO_RUST_func() {
     # Install Go
     curl -s -S -L "$GOLANG_URL" -o go.tar.gz
     tar -f go.tar.gz -xvz
-    sudo mv go /usr/local/go
+    sudo mv -f go /usr/local/go
     rm go.tar.gz
     # Alter terminal profile for Go
     tee -a $TERMINAL_PROFILE_FILE > /dev/null <<EOF
