@@ -109,7 +109,8 @@ INSTALL_GO_RUST_func() {
     # Install Go
     curl -s -S -L "$GOLANG_URL" -o go.tar.gz
     tar -f go.tar.gz -xvz
-    sudo mv -f go /usr/local/go
+    rm -r /usr/local/go
+    sudo mv -f go /usr/local/
     rm go.tar.gz
     # Alter terminal profile for Go
     tee -a $TERMINAL_PROFILE_FILE > /dev/null <<EOF
