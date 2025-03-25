@@ -236,7 +236,7 @@ BUILD_MAC_LAUNCHCTL_PLIST_FILE_func() {
     # Generate the plist file arguments that change depending on whether this is a cluster node or not
     PLIST_ARGS_func
 
-    tee $PLIST_FILE > /dev/null <<EOF
+    sudo tee $PLIST_FILE > /dev/null <<EOF
 <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
 <plist version=\"1.0\">
 <dict>
@@ -616,7 +616,7 @@ chmod 644 $CEREMONYCLIENT_LOGFILE
 
 # Create service file
 echo "Building service file..."
-tee $PLIST_FILE > /dev/null <<EOF
+sudo tee $PLIST_FILE > /dev/null <<EOF
 <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
 <plist version=\"1.0\">
 <dict>
