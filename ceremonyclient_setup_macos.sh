@@ -393,24 +393,30 @@ CONFIG_CHANGES_func() {
 
 FINISHING_TIPS_func() {
     echo ""
+    echo "Finishing tips:"
+    echo "- gRPC has been setup, and the node config has been altered to make use of 'maxFrames: 1001',"
+    echo "  so as to limit the store size. Please let your node run, and when it starts printing, restart it"
+    echo "  so these changes can take effect."
+    # Terminal profile tips
     if [[ "$RELEASE_OS" == 'darwin' ]]; then
-        echo "For better readability in your terminal profile, copy the following to your ~/.zshrc file:"
-        echo "# Terminal display preferences"
-        echo "autoload -Uz vcs_info"
-        echo "precmd() { vcs_info }"
-        echo "zstyle ':vcs_info:git:*' formats '%b '"
-        echo "setopt PROMPT_SUBST"
-        echo "PROMPT='%F{green}%n@%m%f %F{green}%*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f$ '"
+        echo "- For better readability in your terminal profile, copy the following to your ~/.zshrc file:"
+        echo "  # Terminal display preferences"
+        echo "  autoload -Uz vcs_info"
+        echo "  precmd() { vcs_info }"
+        echo "  zstyle ':vcs_info:git:*' formats '%b '"
+        echo "  setopt PROMPT_SUBST"
+        echo "  PROMPT='%F{green}%n@%m%f %F{green}%*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f$ '"
     elif [[ "$RELEASE_OS" == 'linux' ]]; then
-        echo "For better readability in your terminal profile, copy the following to your ~/.bashrc file:"
-        echo "# Terminal display preferences"
-        echo "PS1='${debian_chroot:+($debian_chroot)}\[\033[0;32m\]\u@\h\[\033[00m\] \[\033[0;32m\]\D{%H:%M:%S}\[\033[00m\] \[\033[0;34m\]\w\[\033[00m\] $ '"
+        echo "- For better readability in your terminal profile, copy the following to your ~/.bashrc file:"
+        echo "  # Terminal display preferences"
+        echo "  PS1='${debian_chroot:+($debian_chroot)}\[\033[0;32m\]\u@\h\[\033[00m\] \[\033[0;32m\]\D{%H:%M:%S}\[\033[00m\] \[\033[0;34m\]\w\[\033[00m\] $ '"
     fi
+    # Cluster tips
     if [[ $CLUSTER == 1 ]]; then
-        echo "Make sure to configure the 'dataWorkersMultiaddrs' section of 'engine' in $CEREMONYCLIENT_CONFIG,"
-        echo "and that this section is the same ON ALL MACHINES in order for this node to function as part of the cluster."
+        echo "- Make sure to configure the 'dataWorkersMultiaddrs' section of 'engine' in $CEREMONYCLIENT_CONFIG,"
+        echo "  and that this section is the same ON ALL MACHINES in order for this node to function as part of the cluster."
     fi
-    echo "To set up backups, "
+    echo "- To set up backups, "
     echo ""
 
     return
