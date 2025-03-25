@@ -105,7 +105,7 @@ CONFIRM_NEW_BINARIES_func() {
             if [[ "$QUIET" == 1 ]]; then
                 :
             else
-                echo "${TYPE^} binaries installed successfully."
+                echo "${TYPE^^} binaries installed successfully."
             fi
         else
             if [[ "$QUIET" == 1 ]]; then
