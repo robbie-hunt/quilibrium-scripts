@@ -182,6 +182,38 @@ UPDATE_CLUSTER_FILE_func() {
     return 0
 }
 
+CONFIGURE_LOG_ROTATION_func() {
+    if [[ "$RELEASE_OS" == "darwin" ]]; then
+        # logrotate
+        if brew list -1 logrotate; then
+            :
+        else
+            brew install logrotate
+        fi
+        sudo tee /opt/homebrew/etc/logrotate.d/local.ceremonyclient.conf > /dev/null <<EOF
+$CEREMONYCLIENT_LOGFILE {
+    copytruncate
+    rotate 3
+    size 10240k
+    missingok
+    notifempty
+    compress
+    compressoptions '-9'
+}
+EOF
+        brew services restart logrotate
+        # newsyslog - don't use
+#        sudo tee /etc/newsyslog.d/$PLIST_LABEL.conf > /dev/null <<EOF
+## logfilename [owner:group] mode count size when flags [/pid_file] [sig_num]
+#$CEREMONYCLIENT_LOGFILE robbie:staff 777 3 10240 * JGB
+#EOF
+    elif [[ "$RELEASE_OS" == "linux" ]]; then
+        :
+    fi
+
+    return
+}
+
 # Function to fill the correct 'Program' and 'ProgramArgs' sections of the macOS plist file,
 # including a GOMAXPROCS environment variable, depending on whether this node is being set up as part of a cluster or not
 PLIST_ARGS_func() {
@@ -281,11 +313,7 @@ EOF
         return 1
     fi
 
-    # Configure log rotation
-    sudo tee /etc/newsyslog.d/$PLIST_LABEL.conf > /dev/null <<EOF
-# logfilename [owner:group] mode count size when flags [/pid_file] [sig_num]
-$CEREMONYCLIENT_LOGFILE robbie:staff 644 3 10240 * JGB 
-EOF
+    CONFIGURE_LOG_ROTATION_func
 
     return
 }
