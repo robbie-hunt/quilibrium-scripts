@@ -284,7 +284,7 @@ EOF
     # Configure log rotation
     sudo tee /etc/newsyslog.d/$PLIST_LABEL.conf > /dev/null <<EOF
 # logfilename [owner:group] mode count size when flags [/pid_file] [sig_num]
-$CEREMONYCLIENT_LOGFILE robbie:staff 644 3 1024 * JG
+$CEREMONYCLIENT_LOGFILE robbie:staff 644 3 10240 * JGB 
 EOF
 
     return
