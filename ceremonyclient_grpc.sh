@@ -38,6 +38,10 @@ LOCALENV="$SCRIPT_ROOT_DIR/.localenv"
 
 CEREMONYCLIENT_CONFIG=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_config')
 
+RELEASE_ARCH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -arch)
+RELEASE_OS=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
+RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
+
 # Function to check if a line exists in a file
 LINE_EXISTS_func_func() {
     grep -qF "$1" "$2"
@@ -51,7 +55,26 @@ ADD_LINE_AFTER_PATTERN_func() {
 }
 
 INSTALL_GO_GRPC_PACKAGE_func() {
-    go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+    if [[ "$RELEASE_OS" == 'darwin' ]]; then
+        if [[ $(brew --version) ]]; then
+            brew install grpcurl
+        else
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"  
+            # Get homebrew commands working
+            tee -a ~/.zshrc > /dev/null <<EOF
+
+# Homebrew
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+
+
+EOF
+            . ~/.zshrc
+            brew install grpcurl
+        fi
+    elif [[ "$RELEASE_OS" == 'linux' ]]; then
+        go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+    fi
     return
 }
 
