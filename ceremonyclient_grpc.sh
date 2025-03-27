@@ -12,8 +12,13 @@ USAGE_func() {
     echo ""
     echo "       -h    Display this help dialogue."
     echo "       -x    For debugging the script; sets the x shell builtin, 'set -x'."
+    echo "       -q    Quiet mode."
+    echo "       -g    Install the Golang gRPC package."
     echo "       -l    Set up local gRPC on a node."
     echo "       -p    Set up public gRPC (without a node; just qclient)."
+    echo ""
+    echo "To setup gRPC on a Quil node, run the command using the -g option,"
+    echo "then run it using the -l option, then again using the -p option."
     echo ""
     exit 0
 }
