@@ -31,7 +31,7 @@ LINE_EXISTS_func() {
 
 # Function to add a line after a specific pattern
 ADD_LINE_AFTER_PATTERN_func() {
-    sudo sed -i "/^ *$1:/a\  $2" "$3"
+    sudo sed -i -E "/^ *$1:/a\  $2" "$3"
     return
 }
 
