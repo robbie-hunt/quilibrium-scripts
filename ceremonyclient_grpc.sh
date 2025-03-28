@@ -24,7 +24,7 @@ USAGE_func() {
 }
 
 # Function to check if a line exists in a file
-LINE_EXISTS_func_func() {
+LINE_EXISTS_func() {
     grep -qF "$1" "$2"
     return
 }
