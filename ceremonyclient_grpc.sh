@@ -68,14 +68,14 @@ CHECK_MODIFY_LISTEN_MULTIADDR_func() {
     fi
     
     # Using more flexible pattern matching with grep
-    if grep -q "^[[:space:]]*listenMultiaddr:[[:space:]]*/ip4/0\.0\.0\.0/udp/8336/quic" '$CEREMONYCLIENT_CONFIG'; then
+    if grep -q "^[[:space:]]*listenMultiaddr:[[:space:]]*/ip4/0\.0\.0\.0/udp/8336/quic" $CEREMONYCLIENT_CONFIG; then
         if [[ $QUIET == 1 ]]; then
             :
         else
             echo "Modifying listenMultiaddr..."
         fi
         # Using perl-compatible regex for more reliable replacement
-        sudo sed -i -E 's|^([[:space:]]*)listenMultiaddr:[[:space:]]*/ip4/0\.0\.0\.0/udp/8336/quic.*$|\1listenMultiaddr: /ip4/0.0.0.0/tcp/8336|' '$CEREMONYCLIENT_CONFIG'
+        sudo sed -i -E 's|^([[:space:]]*)listenMultiaddr:[[:space:]]*/ip4/0\.0\.0\.0/udp/8336/quic.*$|\1listenMultiaddr: /ip4/0.0.0.0/tcp/8336|' $CEREMONYCLIENT_CONFIG
         
         if [ $? -eq 0 ]; then
             if [[ $QUIET == 1 ]]; then
@@ -93,7 +93,7 @@ CHECK_MODIFY_LISTEN_MULTIADDR_func() {
         fi
     else
         # Check for new TCP configuration
-        if grep -q "^[[:space:]]*listenMultiaddr:[[:space:]]*/ip4/0\.0\.0\.0/tcp/8336" '$CEREMONYCLIENT_CONFIG'; then
+        if grep -q "^[[:space:]]*listenMultiaddr:[[:space:]]*/ip4/0\.0\.0\.0/tcp/8336" $CEREMONYCLIENT_CONFIG; then
             if [[ $QUIET == 1 ]]; then
                 :
             else
@@ -121,8 +121,8 @@ SETUP_LOCAL_GRPC_func() {
     fi
 
     # Delete existing lines for listenGrpcMultiaddr and listenRESTMultiaddr if they exist
-    sudo sed -i -E 's|^listenGrpcMultiaddr: \"\"|listenGrpcMultiaddr: \"/ip4/127.0.0.1/tcp/8337\"|' '$CEREMONYCLIENT_CONFIG'
-    sudo sed -i -E 's|^listenRESTMultiaddr: \"\"|listenRESTMultiaddr: \"/ip4/127.0.0.1/tcp/8338\"|' '$CEREMONYCLIENT_CONFIG'
+    sudo sed -i -E 's|^listenGrpcMultiaddr: \"\"|listenGrpcMultiaddr: \"/ip4/127.0.0.1/tcp/8337\"|' $CEREMONYCLIENT_CONFIG
+    sudo sed -i -E 's|^listenRESTMultiaddr: \"\"|listenRESTMultiaddr: \"/ip4/127.0.0.1/tcp/8338\"|' $CEREMONYCLIENT_CONFIG
 
     if [[ $QUIET == 1 ]]; then
         :
@@ -143,12 +143,12 @@ SETUP_PUBLIC_GRPC_func() {
     fi
 
     # Delete existing lines for listenGrpcMultiaddr and listenRESTMultiaddr if they exist
-    sudo sed -i '/^ *listenGrpcMultiaddr:/d' '$CEREMONYCLIENT_CONFIG'
-    sudo sed -i '/^ *listenRESTMultiaddr:/d' '$CEREMONYCLIENT_CONFIG'
+    sudo sed -i '/^ *listenGrpcMultiaddr:/d' $CEREMONYCLIENT_CONFIG
+    sudo sed -i '/^ *listenRESTMultiaddr:/d' $CEREMONYCLIENT_CONFIG
 
     # Add blank gRPC and local REST settings
-    echo "listenGrpcMultiaddr: \"\"" | sudo tee -a '$CEREMONYCLIENT_CONFIG' > /dev/null || { if [[ $QUIET == 1 ]]; then :; else echo "Failed to set blank gRPC. Exiting..."; fi; return 1; }
-    echo "listenRESTMultiaddr: \"/ip4/127.0.0.1/tcp/8338\"" | sudo tee -a '$CEREMONYCLIENT_CONFIG' > /dev/null || { if [[ $QUIET == 1 ]]; then :; else echo "Failed to set REST. Exiting..."; fi; return 1; }
+    echo "listenGrpcMultiaddr: \"\"" | sudo tee -a $CEREMONYCLIENT_CONFIG > /dev/null || { if [[ $QUIET == 1 ]]; then :; else echo "Failed to set blank gRPC. Exiting..."; fi; return 1; }
+    echo "listenRESTMultiaddr: \"/ip4/127.0.0.1/tcp/8338\"" | sudo tee -a $CEREMONYCLIENT_CONFIG > /dev/null || { if [[ $QUIET == 1 ]]; then :; else echo "Failed to set REST. Exiting..."; fi; return 1; }
 
     if [[ $QUIET == 1 ]]; then
         :
@@ -165,8 +165,8 @@ SETUP_STATS_COLLECTION_func() {
     else
         echo "Enabling stats collection..."
     fi
-    if ! LINE_EXISTS_func "statsMultiaddr: \"/dns/stats.quilibrium.com/tcp/443\"" '$CEREMONYCLIENT_CONFIG'; then
-        ADD_LINE_AFTER_PATTERN_func "engine" "statsMultiaddr: \"/dns/stats.quilibrium.com/tcp/443\"" '$CEREMONYCLIENT_CONFIG'
+    if ! LINE_EXISTS_func "statsMultiaddr: \"/dns/stats.quilibrium.com/tcp/443\"" $CEREMONYCLIENT_CONFIG; then
+        ADD_LINE_AFTER_PATTERN_func "engine" "statsMultiaddr: \"/dns/stats.quilibrium.com/tcp/443\"" $CEREMONYCLIENT_CONFIG
         if [[ $QUIET == 1 ]]; then
             :
         else
@@ -196,6 +196,8 @@ SCRIPT_ROOT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print}'
 LOCALENV="$SCRIPT_ROOT_DIR/.localenv"
 
 CEREMONYCLIENT_CONFIG=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_config')
+
+echo "CEREMONYCLIENT_CONFIG = $CEREMONYCLIENT_CONFIG"
 
 RELEASE_ARCH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -arch)
 RELEASE_OS=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
