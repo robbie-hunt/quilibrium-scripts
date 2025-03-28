@@ -190,16 +190,58 @@ CONFIGURE_LOG_ROTATION_func() {
         else
             brew install logrotate
         fi
-        sudo tee /opt/homebrew/etc/logrotate.d/local.ceremonyclient.conf > /dev/null <<EOF
+        LOGROTATE_CONF_FILE=/opt/homebrew/etc/logrotate.d/$PLIST_LABEL.conf
+        tee $LOGROTATE_CONF_FILE > /dev/null <<EOF
 $CEREMONYCLIENT_LOGFILE {
     copytruncate
-    rotate 3
-    size 10240k
+    rotate 10
+    size 500M
     missingok
     notifempty
     compress
     compressoptions '-9'
 }
+EOF
+        chown $USER:admin /opt/homebrew/etc/logrotate.d/$PLIST_LABEL.conf
+        chmod 644 /opt/homebrew/etc/logrotate.d/$PLIST_LABEL.conf
+
+        LOGROTATE_PLIST_FILE=/Library/LaunchDaemons/$PLIST_LABEL-logrotate.plist
+        sudo tee $LOGROTATE_PLIST_FILE > /dev/null <<EOF
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<dict>
+    <key>Label</key>
+    <string>$PLIST_LABEL-logrotate</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/sbin/logrotate</string>
+        <string>-f</string>
+        <string>$LOGROTATE_CONF_FILE</string>
+    </array>
+
+    <key>StartInterval</key>
+    <integer>300</integer>
+    
+    <key>WorkingDirectory</key>
+    <string>/opt/homebrew/sbin</string>
+    
+    <key>UserName</key>
+    <string>$USER</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>ExitTimeOut</key>
+    <integer>30</integer>
+
+    <key>StandardErrorPath</key>
+    <string>$CEREMONYCLIENT_LOGROTATE_LOGFILE</string>
+
+    <key>StandardOutPath</key>
+    <string>$CEREMONYCLIENT_LOGROTATE_LOGFILE</string>
+</dict>
+</plist>
 EOF
         brew services restart logrotate
         # newsyslog - don't use
@@ -270,7 +312,7 @@ BUILD_MAC_LAUNCHCTL_PLIST_FILE_func() {
     # Generate the plist file arguments that change depending on whether this is a cluster node or not
     PLIST_ARGS_func
 
-    sudo tee $PLIST_FILE > /dev/null <<EOF
+    sudo tee $CEREMONYCLIENT_PLIST_FILE > /dev/null <<EOF
 <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
 <plist version=\"1.0\">
 <dict>
@@ -304,11 +346,11 @@ BUILD_MAC_LAUNCHCTL_PLIST_FILE_func() {
 EOF
 
     # Test service file
-    PLUTIL_TEST=$(plutil -lint $PLIST_FILE)
-    if [[ $PLUTIL_TEST == "$PLIST_FILE: OK" ]]; then
+    PLUTIL_TEST=$(plutil -lint $CEREMONYCLIENT_PLIST_FILE)
+    if [[ $PLUTIL_TEST == "$CEREMONYCLIENT_PLIST_FILE: OK" ]]; then
         :
     else
-        echo "Error: plutil test on $PLIST_FILE file failed. Results below:"
+        echo "Error: plutil test on $CEREMONYCLIENT_PLIST_FILE file failed. Results below:"
         echo "$PLUTIL_TEST"
         return 1
     fi
@@ -504,13 +546,14 @@ fi
 
 # (macOS only) The logfile that will be used for the ceremonyclient
 CEREMONYCLIENT_LOGFILE="$HOME/ceremonyclient.log"
+CEREMONYCLIENT_LOGROTATE_LOGFILE="$HOME/ceremonyclient-logrotate.log"
 
 # Ceremonyclient config file location
 CEREMONYCLIENT_CONFIG_FILE=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key "ceremonyclient_config")
 
 # Plist name and file
 PLIST_LABEL="local.ceremonyclient"
-PLIST_FILE=/Library/LaunchDaemons/$PLIST_LABEL.plist
+CEREMONYCLIENT_PLIST_FILE=/Library/LaunchDaemons/$PLIST_LABEL.plist
 
 # Get the latest version numbers of the node and qclient binaries from release
 NODE_VERSION=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-release-quiet')
