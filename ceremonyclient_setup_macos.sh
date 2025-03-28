@@ -87,12 +87,6 @@ EOF
 }
 
 INSTALL_GO_RUST_func() {
-    if [[ "$RELEASE_OS" == 'darwin' ]]; then
-        TERMINAL_PROFILE_FILE=~/.zshrc
-    elif [[ "$RELEASE_OS" == 'linux' ]]; then
-        TERMINAL_PROFILE_FILE=~/.bashrc
-    fi
-
     # Install Go
     curl -s -S -L "$GOLANG_URL" -o go.tar.gz
     tar -f go.tar.gz -xvz
@@ -469,6 +463,7 @@ FINISHING_TIPS_func() {
         echo "  zstyle ':vcs_info:git:*' formats '%b '"
         echo "  setopt PROMPT_SUBST"
         echo "  PROMPT='%F{green}%n@%m%f %F{green}%*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f$ '"
+        echo "  and run the command '. $TERMINAL_PROFILE_FILE'."
     elif [[ "$RELEASE_OS" == 'linux' ]]; then
         echo "- For better readability in your terminal profile, copy the following to your ~/.bashrc file:"
         echo "  # Terminal display preferences"
@@ -570,6 +565,12 @@ QCLIENT_BINARY=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'q
 RELEASE_ARCH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -arch)
 RELEASE_OS=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
 RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
+
+if [[ "$RELEASE_OS" == 'darwin' ]]; then
+    TERMINAL_PROFILE_FILE=~/.zshrc
+elif [[ "$RELEASE_OS" == 'linux' ]]; then
+    TERMINAL_PROFILE_FILE=~/.bashrc
+fi
 
 INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func
 
