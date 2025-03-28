@@ -31,8 +31,8 @@ LINE_EXISTS_func() {
 
 # Function to add a line after a specific pattern
 ADD_LINE_AFTER_PATTERN_func() {
-    sudo sed -i "/^ *$1:/a\  $2" "$3" || { echo "Failed to add line after '$1'. Exiting..."; return 1; }
-    return 0
+    sudo sed -i "/^ *$1:/a\  $2" "$3"
+    return
 }
 
 INSTALL_GO_GRPC_PACKAGE_func() {
