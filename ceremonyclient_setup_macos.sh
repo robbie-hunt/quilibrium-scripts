@@ -404,15 +404,24 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
         sudo launchctl enable system/local.ceremonyclient
         sleep 2
         sudo launchctl bootstrap system /Library/LaunchDaemons/local.ceremonyclient.plist
-        sleep 2
+        # Let service sit for 10 mins, then print out the logfile
+        echo "ceremonyclient daemon created, waiting 10 minutes before printing from the logfile ceremonyclient."
+        sleep 600
+
+        sudo launchctl stop system/local.ceremonyclient
+        # Set maxFrames (frame truncation) to 1001 frames, to save on disk space
+        sudo sed -i -E 's|maxFrames: .*|maxFrames: 1001|' "$CEREMONYCLIENT_CONFIG_FILE"
+        # Set logfile
+        sudo sed -i -E "s|logFile: .*|logFile: \"$CEREMONYCLIENT_LOGFILE\"|" "$CEREMONYCLIENT_CONFIG_FILE"
+        # Enable gRPC
+        bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -g
+        bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -l
+        bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -p
+
         # Use kickstart with the -k flag to kill any currently running ceremonyclient services,
         # and -p flag to print the PID of the service that starts up
         # This ensures only one ceremonyclient service running
-        launchctl kickstart -kp system/local.ceremonyclient
-
-        # Let service sit for 60s, then print out the logfile
-        echo "ceremonyclient daemon updated and restarted. Waiting 2 minutes before printing from the logfile ceremonyclient."
-        sleep 120
+        sudo launchctl kickstart -kp system/local.ceremonyclient
         tail -200 "$CEREMONYCLIENT_LOGFILE"
         echo "---- End of logs print ----"
         echo ""
@@ -441,9 +450,6 @@ CONFIG_CHANGES_func() {
     bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -g
     bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -l
     bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -p
-
-    # Set maxFrames (frame truncation) to 1001 frames, to save on disk space
-    sudo sed -i -E 's|maxFrames: .*|maxFrames: 1001|' "$CEREMONYCLIENT_CONFIG_FILE"
 
     return
 }
