@@ -23,25 +23,6 @@ USAGE_func() {
     exit 0
 }
 
-# Figure out what directory I'm in
-SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
-  SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
-  SOURCE="$(readlink "$SOURCE")"
-  [[ $SOURCE != /* ]] && SOURCE="$SCRIPT_DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
-done
-SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
-SCRIPT_ROOT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print}' | sed 's/\/*$//')
-
-# .localenv file location
-LOCALENV="$SCRIPT_ROOT_DIR/.localenv"
-
-CEREMONYCLIENT_CONFIG=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_config')
-
-RELEASE_ARCH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -arch)
-RELEASE_OS=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
-RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
-
 # Function to check if a line exists in a file
 LINE_EXISTS_func_func() {
     grep -qF "$1" "$2"
@@ -201,7 +182,27 @@ SETUP_STATS_COLLECTION_func() {
     return 0
 }
 
+# Figure out what directory I'm in
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$SCRIPT_DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+SCRIPT_ROOT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print}' | sed 's/\/*$//')
 
+# .localenv file location
+LOCALENV="$SCRIPT_ROOT_DIR/.localenv"
+
+CEREMONYCLIENT_CONFIG=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_config')
+
+RELEASE_ARCH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -arch)
+RELEASE_OS=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
+RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
+
+# Set to 1 by using the -q flag; quietens unnecessary output
+QUIET=0
 
 while getopts "xhqglp" opt; do
     case "$opt" in
