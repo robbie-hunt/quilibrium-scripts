@@ -506,7 +506,7 @@ CLUSTER_DATA_WORKER_COUNT=0
 # Supply a node directory using the -d flag
 DIRECTORY=0
 
-while getopts "xhqcC:D:" opt; do
+while getopts "xhqcd:C:D:" opt; do
     case "$opt" in
         x) set -x;;
         h) USAGE_func; exit 0;;

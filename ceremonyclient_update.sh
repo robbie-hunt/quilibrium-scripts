@@ -20,15 +20,14 @@ USAGE_func() {
     exit 0
 }
 
-# Figure out what directory I'm in
-SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
-  SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
-  SOURCE="$(readlink "$SOURCE")"
-  [[ $SOURCE != /* ]] && SOURCE="$SCRIPT_DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
-done
-SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
-SCRIPT_ROOT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print}' | sed 's/\/*$//')
+# Check the .localenv file; if it doesn't exist, initialise one
+CHECK_LOCALENV_func() {
+    if ./tools/ceremonyclient_check_localenv.sh -q; then
+        :
+    else
+        bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -env-init
+    fi
+}
 
 # Compare the currently installed binary with the latest available binary from release
 COMPARE_VERSIONS_func() {
@@ -49,7 +48,7 @@ COMPARE_VERSIONS_func() {
 UPDATE_SERVICE_FILE_func() {
     # If cluster, update start_cluster script
     if [[ $CLUSTER == 1 ]]; then
-        sed -i "s/NODE_BINARY\=[^<]*/NODE_BINARY\=\'$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME\'/" ceremonyclient_start_cluster.sh
+        sed -i "s/NODE_BINARY\=[^<]*/NODE_BINARY\=$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
     # If not cluster, then
     else
         # If macOS, update launchctl plist file
@@ -57,16 +56,34 @@ UPDATE_SERVICE_FILE_func() {
             sudo sed -i "s/node-[^<]*/node-$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" /Library/LaunchDaemons/local.ceremonyclient.plist
         # If Linux, update systemctl service file
         elif [[ "$RELEASE_OS" == "linux" ]]; then
-            sed -i "/^ExecStart\=.*/c ExecStart\=$NEW_LATEST_NODE_FILE_INSTALLED_PATH" /lib/systemd/system/ceremonyclient.service
+            sed -i "s/^ExecStart\=.*/c ExecStart\=$NEW_LATEST_NODE_FILE_INSTALLED_PATH/" /lib/systemd/system/ceremonyclient.service
         fi
     fi
     return
 }
 
-# Function to update the start_cluster script
 UPDATE_CLUSTER_FILE_func() {
+    # Update start_cluster script
     if [[ $CLUSTER == 1 ]]; then
         sed -i "s/NODE_BINARY\=[^<]*/NODE_BINARY\=$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
+    fi
+
+    return 0
+}
+
+UPDATE_LAUNCHCTL_PLIST_FILE_func() {
+    # Update launchctl plist file
+    if [[ $CLUSTER == 1 ]]; then
+        sudo sed -i "s/node-[^<]*/node-$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" /Library/LaunchDaemons/local.ceremonyclient.plist
+    fi
+
+    return 0
+}
+
+UPDATE_LAUNCHCTL_PLIST_FILE_func() {
+    # Update systemctl service file
+    if [[ $CLUSTER == 1 ]]; then
+        sed -i "s/^ExecStart\=.*/c ExecStart\=$NEW_LATEST_NODE_FILE_INSTALLED_PATH/" /lib/systemd/system/ceremonyclient.service
     fi
 
     return 0
@@ -93,7 +110,9 @@ PLIST_ARGS_func() {
         PLIST_ARGS="<key>Program</key>
     <string>$CEREMONYCLIENT_NODE_DIR/$NODE_BINARY</string>
     <key>ProgramArguments</key>
-    <string>$CEREMONYCLIENT_NODE_DIR/$NODE_BINARY</string>
+    <array>
+        <string>$CEREMONYCLIENT_NODE_DIR/$NODE_BINARY</string>
+    </array>
     
     <key>WorkingDirectory</key>
     <string>$CEREMONYCLIENT_NODE_DIR</string>
@@ -126,7 +145,7 @@ BUILD_MAC_LAUNCHCTL_PLIST_FILE_func() {
     # Generate the plist file arguments that change depending on whether this is a cluster node or not
     PLIST_ARGS_func
 
-    tee $PLIST_FILE > /dev/null <<EOF
+    sudo tee $CEREMONYCLIENT_PLIST_FILE > /dev/null <<EOF
 <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
 <plist version=\"1.0\">
 <dict>
@@ -160,20 +179,14 @@ BUILD_MAC_LAUNCHCTL_PLIST_FILE_func() {
 EOF
 
     # Test service file
-    PLUTIL_TEST=$(plutil -lint $PLIST_FILE)
-    if [[ $PLUTIL_TEST == "$PLIST_FILE: OK" ]]; then
+    PLUTIL_TEST=$(plutil -lint $CEREMONYCLIENT_PLIST_FILE)
+    if [[ $PLUTIL_TEST == "$CEREMONYCLIENT_PLIST_FILE: OK" ]]; then
         :
     else
-        echo "Error: plutil test on $PLIST_FILE file failed. Results below:"
+        echo "Error: plutil test on $CEREMONYCLIENT_PLIST_FILE file failed. Results below:"
         echo "$PLUTIL_TEST"
         return 1
     fi
-
-    # Configure log rotation
-    sudo tee /etc/newsyslog.d/$PLIST_LABEL.conf > /dev/null <<EOF
-# logfilename [owner:group] mode count size when flags [/pid_file] [sig_num]
-$CEREMONYCLIENT_LOGFILE robbie:staff 644 3 1024 * JG
-EOF
 
     return
 }
@@ -229,6 +242,11 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
     # If macOS, then update launchctl plist file and restart service
     # Using launchctl commands 'bootout' and 'bootstrap' instead of the deprecated 'load' and 'unload' commands
     if [[ "$RELEASE_OS" == "darwin" ]]; then
+        # Unload the plist before editing it and starting it up again
+        sudo launchctl stop system/local.ceremonyclient
+        sleep 2
+        sudo launchctl bootout system /Library/LaunchDaemons/local.ceremonyclient.plist
+        sleep 2
         BUILD_MAC_LAUNCHCTL_PLIST_FILE_func
 
         # Enable, load and start service
@@ -239,11 +257,11 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
         # Use kickstart with the -k flag to kill any currently running ceremonyclient services,
         # and -p flag to print the PID of the service that starts up
         # This ensures only one ceremonyclient service running
-        launchctl kickstart -kp system/local.ceremonyclient
+        sudo launchctl kickstart -kp system/local.ceremonyclient
+        # Let service sit for 10 mins, then print out the logfile
+        echo "ceremonyclient daemon created, waiting 10 minutes before printing from the logfile ceremonyclient."
+        sleep 600
 
-        # Let service sit for 60s, then print out the logfile
-        echo "ceremonyclient daemon updated and restarted. Waiting 2 minutes before printing from the logfile ceremonyclient."
-        sleep 120
         tail -200 "$CEREMONYCLIENT_LOGFILE"
         echo "---- End of logs print ----"
         echo ""
@@ -267,6 +285,19 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
     return
 }
 
+# Figure out what directory I'm in
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$SCRIPT_DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+SCRIPT_ROOT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print}' | sed 's/\/*$//')
+
+# .localenv file location
+LOCALENV="$SCRIPT_ROOT_DIR/.localenv"
+
 # Set to 1 by using the -q flag; quietens unnecessary output
 QUIET=0
 
@@ -282,7 +313,7 @@ CLUSTER_DATA_WORKER_COUNT=0
 # Supply a node directory using the -d flag
 DIRECTORY=0
 
-while getopts "xhqcC:D:d" opt; do
+while getopts "xhqcC:D:d:" opt; do
     case "$opt" in
         x) set -x;;
         h) USAGE_func; exit 0;;
@@ -296,6 +327,8 @@ while getopts "xhqcC:D:d" opt; do
 done
 shift $((OPTIND -1))
 
+CHECK_LOCALENV_func
+
 # Make sure that if -c is used, -C and -D are also supplied
 if [[ "$CLUSTER" == 1 ]]; then
     if [[ "$CLUSTER_CORE_INDEX_START" == 0 || "$CLUSTER_DATA_WORKER_COUNT" == 0 ]]; then
@@ -308,19 +341,6 @@ else
     :
 fi
 
-# Make sure .localenv is in order; if not, exit
-if $(bash $SCRIPT_DIR/tools/ceremonyclient_check_localenv.sh -q); then
-    :
-else
-    bash $SCRIPT_DIR/tools/ceremonyclient_check_localenv.sh
-    exit 1
-fi
-
-# The OS of the machine running this script
-RELEASE_OS=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
-# The release line ('os-arch') of the machine running this script
-RELEASE_LINE=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -release-line)
-
 # For the ceremonyclient node directory
 # If a directory was supplied via the -d option, use it
 # Otherwise, use the directory in the .localenv
@@ -330,8 +350,14 @@ else
     CEREMONYCLIENT_NODE_DIR="$DIRECTORY"
 fi
 
-# Logfile location
+# The OS of the machine running this script
+RELEASE_OS=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
+# The release line ('os-arch') of the machine running this script
+RELEASE_LINE=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -release-line)
+
+# (macOS only) The logfile that will be used for the ceremonyclient
 CEREMONYCLIENT_LOGFILE="$HOME/ceremonyclient.log"
+CEREMONYCLIENT_LOGROTATE_LOGFILE="$HOME/ceremonyclient-logrotate.log"
 
 # Get the latest version of the main node and qclient binaries,
 # both installed and available in release
