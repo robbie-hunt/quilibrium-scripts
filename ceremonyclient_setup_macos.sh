@@ -410,9 +410,7 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
         sudo launchctl enable system/local.ceremonyclient
         sleep 2
         sudo launchctl bootstrap system /Library/LaunchDaemons/local.ceremonyclient.plist
-        # Let service sit for 10 mins, then print out the logfile
-        echo "ceremonyclient daemon created, waiting 10 minutes before printing from the logfile ceremonyclient."
-        sleep 600
+        sleep 60
 
         sudo launchctl stop system/local.ceremonyclient
         # Set maxFrames (frame truncation) to 1001 frames, to save on disk space
@@ -428,6 +426,9 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
         # and -p flag to print the PID of the service that starts up
         # This ensures only one ceremonyclient service running
         sudo launchctl kickstart -kp system/local.ceremonyclient
+        # Let service sit for 10 mins, then print out the logfile
+        echo "ceremonyclient daemon created, waiting 5 minutes before printing from the logfile ceremonyclient."
+        sleep 300
         tail -200 "$CEREMONYCLIENT_LOGFILE"
         echo "---- End of logs print ----"
         echo ""
