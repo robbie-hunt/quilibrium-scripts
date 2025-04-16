@@ -38,6 +38,7 @@ COMPARE_VERSIONS_func() {
     if [[ "$FILE_INSTALLED" == "$FILE_RELEASE" ]]; then
         echo "$FILE_INSTALLED file installed is the latest version, no need to update."
     else
+        UPDATE_AVAILABLE=1
         echo "Update required for $FILE_INSTALLED."
         bash $SCRIPT_DIR/tools/ceremonyclient_download.sh -f "$FILE_RELEASE"
     fi
@@ -366,8 +367,17 @@ LATEST_NODE_RELEASE=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-versi
 LATEST_QCLIENT_INSTALLED=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'qclient-installed-files-quiet')
 LATEST_QCLIENT_RELEASE=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'qclient-release-files-quiet')
 
+UPDATE_AVAILABLE=0
+
 COMPARE_VERSIONS_func "$LATEST_NODE_INSTALLED" "$LATEST_NODE_RELEASE"
 COMPARE_VERSIONS_func "$LATEST_QCLIENT_INSTALLED" "$LATEST_QCLIENT_RELEASE"
+
+if [[ $UPDATE_AVAILABLE == 1 ]]; then
+    :
+else
+    echo "No updates are available."
+    exit
+fi
 
 ALTER_RELOAD_RESTART_DAEMONS_func
 
