@@ -95,10 +95,10 @@ UPDATE_LAUNCHCTL_PLIST_FILE_func() {
 PLIST_ARGS_func() {
     if [[ $CLUSTER == 1 ]]; then
         PLIST_ARGS="<key>Program</key>
-    <string>$SCRIPT_ROOT_DIR/ceremonyclient_start_cluster.sh</string>
+    <string>$CEREMONYCLIENT_NODE_DIR/ceremonyclient_start_cluster.sh</string>
     <key>ProgramArguments</key>
     <array>
-        <string>$SCRIPT_ROOT_DIR/ceremonyclient_start_cluster.sh</string>
+        <string>$CEREMONYCLIENT_NODE_DIR/ceremonyclient_start_cluster.sh</string>
         <string>--core-index-start</string>
         <string>$CLUSTER_CORE_INDEX_START</string>
         <string>--data-worker-count</string>
@@ -196,7 +196,7 @@ SYSTEMCTL_SERVICE_FILE_ARGS_func() {
     # If cluster, update the ceremonyclient_start_cluster.sh file with the right details
     # so it can be used in the systemctl service file
     if [[ $CLUSTER == 1 ]]; then
-        SYSTEMCTL_SERVICE_FILE_ARGS="ExecStart=$SCRIPT_ROOT_DIR/ceremonyclient_start_cluster.sh --core-index-start $CLUSTER_CORE_INDEX_START --data-worker-count $CLUSTER_DATA_WORKER_COUNT"
+        SYSTEMCTL_SERVICE_FILE_ARGS="ExecStart=$CEREMONYCLIENT_NODE_DIR/ceremonyclient_start_cluster.sh --core-index-start $CLUSTER_CORE_INDEX_START --data-worker-count $CLUSTER_DATA_WORKER_COUNT"
     else
         SYSTEMCTL_SERVICE_FILE_ARGS="ExecStart=$CEREMONYCLIENT_NODE_DIR/$NODE_BINARY
 Environment='GOMAXPROCS=$GOMAXPROCS'"
