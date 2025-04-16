@@ -63,8 +63,9 @@ INSTALL_DEPENDANCIES_func() {
             :
         else
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"  
-            # Get homebrew commands working
-            tee -a ~/.zshrc > /dev/null <<EOF
+            if [[ $SKIP_TERMINAL_PROFILE == 1 ]]; then
+                # Get homebrew commands working
+                tee -a ~/.zshrc > /dev/null <<EOF
 
 # Homebrew
 eval "$(/opt/homebrew/bin/brew shellenv)"
@@ -72,7 +73,10 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 
 
 EOF
-            . ~/.zshrc
+                . ~/.zshrc
+            else
+                :
+            fi
         fi
         for MAC_BREW_DEPENDANCY in $MAC_BREW_DEPENDANCIES; do
             if brew list -1 "$MAC_BREW_DEPENDANCY"; then
@@ -93,8 +97,9 @@ INSTALL_GO_RUST_func() {
     sudo rm -r /usr/local/go
     sudo mv -f go /usr/local/
     rm go.tar.gz
-    # Alter terminal profile for Go
-    tee -a $TERMINAL_PROFILE_FILE > /dev/null <<EOF
+    if [[ $SKIP_TERMINAL_PROFILE == 1 ]]; then
+        # Alter terminal profile for Go
+        tee -a $TERMINAL_PROFILE_FILE > /dev/null <<EOF
 
 # Golang
 export GOROOT=/usr/local/go
@@ -106,15 +111,19 @@ export PATH=$PATH:/usr/local/go/bin
 
 
 EOF
-    . $TERMINAL_PROFILE_FILE
+        . $TERMINAL_PROFILE_FILE
+    else
+        :
+    fi
 
     # Install Rust
     if [[ $(rustc --version) ]]; then
         :
     else
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-        # Alter terminal profile for Rust
-        tee -a $TERMINAL_PROFILE_FILE > /dev/null <<EOF
+        if [[ $SKIP_TERMINAL_PROFILE == 1 ]]; then
+            # Alter terminal profile for Rust
+            tee -a $TERMINAL_PROFILE_FILE > /dev/null <<EOF
 
 # Rust
 . "$HOME/.cargo/env"
@@ -123,6 +132,9 @@ EOF
 
 EOF
         . $TERMINAL_PROFILE_FILE
+    else
+        :
+    fi
         cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.2.2+v0.25.0
     fi
 }
@@ -506,7 +518,10 @@ CLUSTER_DATA_WORKER_COUNT=0
 # Supply a node directory using the -d flag
 DIRECTORY=0
 
-while getopts "xhqcd:C:D:" opt; do
+# To skip the alterations to terminal profile
+SKIP_TERMINAL_PROFILE=0
+
+while getopts "xhqcd:C:D:p" opt; do
     case "$opt" in
         x) set -x;;
         h) USAGE_func; exit 0;;
@@ -515,6 +530,7 @@ while getopts "xhqcd:C:D:" opt; do
         d) DIRECTORY="$OPTARG";;
         C) CLUSTER_CORE_INDEX_START="$OPTARG";;
         D) CLUSTER_DATA_WORKER_COUNT="$OPTARG";;
+        p) SKIP_TERMINAL_PROFILE=1;;
         *) USAGE_func; exit 0;;
     esac
 done
