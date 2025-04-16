@@ -63,7 +63,7 @@ INSTALL_DEPENDANCIES_func() {
             :
         else
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"  
-            if [[ $SKIP_TERMINAL_PROFILE == 1 ]]; then
+            if [[ $SKIP_TERMINAL_PROFILE == 0 ]]; then
                 # Get homebrew commands working
                 tee -a ~/.zshrc > /dev/null <<EOF
 
@@ -97,7 +97,7 @@ INSTALL_GO_RUST_func() {
     sudo rm -r /usr/local/go
     sudo mv -f go /usr/local/
     rm go.tar.gz
-    if [[ $SKIP_TERMINAL_PROFILE == 1 ]]; then
+    if [[ $SKIP_TERMINAL_PROFILE == 0 ]]; then
         # Alter terminal profile for Go
         tee -a $TERMINAL_PROFILE_FILE > /dev/null <<EOF
 
@@ -121,7 +121,7 @@ EOF
         :
     else
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-        if [[ $SKIP_TERMINAL_PROFILE == 1 ]]; then
+        if [[ $SKIP_TERMINAL_PROFILE == 0 ]]; then
             # Alter terminal profile for Rust
             tee -a $TERMINAL_PROFILE_FILE > /dev/null <<EOF
 
