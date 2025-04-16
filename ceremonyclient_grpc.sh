@@ -31,7 +31,7 @@ LINE_EXISTS_func() {
 
 # Function to add a line after a specific pattern
 ADD_LINE_AFTER_PATTERN_func() {
-#    sudo sed -i -E "/^ *$1:/a\ $2" "$3"
+#    sudo sed -i'.sed-bak' -E "/^ *$1:/a\ $2" "$3"
     sudo sed -i '' -E "/^ *$1:/a\\
   $2
 " "$3"
@@ -78,7 +78,7 @@ CHECK_MODIFY_LISTEN_MULTIADDR_func() {
             echo "Modifying listenMultiaddr..."
         fi
         # Using perl-compatible regex for more reliable replacement
-        sudo sed -i -E 's|^([[:space:]]*)listenMultiaddr:[[:space:]]*/ip4/0\.0\.0\.0/udp/8336/quic.*$|\1listenMultiaddr: /ip4/0.0.0.0/tcp/8336|' $CEREMONYCLIENT_CONFIG
+        sudo sed -i'.sed-bak' -E 's|^([[:space:]]*)listenMultiaddr:[[:space:]]*/ip4/0\.0\.0\.0/udp/8336/quic.*$|\1listenMultiaddr: /ip4/0.0.0.0/tcp/8336|' $CEREMONYCLIENT_CONFIG
         
         if [ $? -eq 0 ]; then
             if [[ $QUIET == 1 ]]; then
@@ -124,8 +124,8 @@ SETUP_LOCAL_GRPC_func() {
     fi
 
     # Delete existing lines for listenGrpcMultiaddr and listenRESTMultiaddr if they exist
-    sudo sed -i -E 's|^listenGrpcMultiaddr: \"\"|listenGrpcMultiaddr: \"/ip4/127.0.0.1/tcp/8337\"|' $CEREMONYCLIENT_CONFIG
-    sudo sed -i -E 's|^listenRESTMultiaddr: \"\"|listenRESTMultiaddr: \"/ip4/127.0.0.1/tcp/8338\"|' $CEREMONYCLIENT_CONFIG
+    sudo sed -i'.sed-bak' -E 's|^listenGrpcMultiaddr: \"\"|listenGrpcMultiaddr: \"/ip4/127.0.0.1/tcp/8337\"|' $CEREMONYCLIENT_CONFIG
+    sudo sed -i'.sed-bak' -E 's|^listenRESTMultiaddr: \"\"|listenRESTMultiaddr: \"/ip4/127.0.0.1/tcp/8338\"|' $CEREMONYCLIENT_CONFIG
 
     if [[ $QUIET == 1 ]]; then
         :

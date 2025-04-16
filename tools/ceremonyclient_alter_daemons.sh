@@ -30,7 +30,7 @@ SCRIPT_ROOT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print}'
 # Function to update the start_cluster script
 UPDATE_CLUSTER_FILE_func() {
     if [[ $CLUSTER == 1 ]]; then
-        sed -i "s/NODE_BINARY\=[^<]*/NODE_BINARY\=$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
+        sed -i'.sed-bak' "s/NODE_BINARY\=[^<]*/NODE_BINARY\=$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
     fi
 
     return 0

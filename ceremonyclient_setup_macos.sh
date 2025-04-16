@@ -169,7 +169,7 @@ DOWNLOAD_INSTALL_BINARIES_func() {
 # Function to update the start_cluster script
 UPDATE_CLUSTER_FILE_func() {
     if [[ $CLUSTER == 1 ]]; then
-        sed -i "s/NODE_BINARY\=[^<]*/NODE_BINARY\=$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
+        sed -i'.sed-bak' "s/NODE_BINARY\=[^<]*/NODE_BINARY\=$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
     fi
 
     return 0
@@ -416,9 +416,9 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
 
         sudo launchctl stop system/local.ceremonyclient
         # Set maxFrames (frame truncation) to 1001 frames, to save on disk space
-        sudo sed -i -E 's|maxFrames: .*|maxFrames: 1001|' "$CEREMONYCLIENT_CONFIG_FILE"
+        sudo sed -i'.sed-bak' -E 's|maxFrames: .*|maxFrames: 1001|' "$CEREMONYCLIENT_CONFIG_FILE"
         # Set logfile
-        sudo sed -i -E "s|logFile: .*|logFile: \"$CEREMONYCLIENT_LOGFILE\"|" "$CEREMONYCLIENT_CONFIG_FILE"
+        sudo sed -i'.sed-bak' -E "s|logFile: .*|logFile: \"$CEREMONYCLIENT_LOGFILE\"|" "$CEREMONYCLIENT_CONFIG_FILE"
         # Enable gRPC
         bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -g
         bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -l

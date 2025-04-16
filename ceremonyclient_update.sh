@@ -49,15 +49,15 @@ COMPARE_VERSIONS_func() {
 UPDATE_SERVICE_FILE_func() {
     # If cluster, update start_cluster script
     if [[ $CLUSTER == 1 ]]; then
-        sed -i "s/NODE_BINARY\=[^<]*/NODE_BINARY\=$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
+        sed -i'.sed-bak' "s/NODE_BINARY\=[^<]*/NODE_BINARY\=$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
     # If not cluster, then
     else
         # If macOS, update launchctl plist file
         if [[ "$RELEASE_OS" == "darwin" ]]; then
-            sudo sed -i "s/node-[^<]*/node-$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" /Library/LaunchDaemons/local.ceremonyclient.plist
+            sudo sed -i'.sed-bak' "s/node-[^<]*/node-$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" /Library/LaunchDaemons/local.ceremonyclient.plist
         # If Linux, update systemctl service file
         elif [[ "$RELEASE_OS" == "linux" ]]; then
-            sed -i "s/^ExecStart\=.*/c ExecStart\=$NEW_LATEST_NODE_FILE_INSTALLED_PATH/" /lib/systemd/system/ceremonyclient.service
+            sed -i'.sed-bak' "s/^ExecStart\=.*/c ExecStart\=$NEW_LATEST_NODE_FILE_INSTALLED_PATH/" /lib/systemd/system/ceremonyclient.service
         fi
     fi
     return
@@ -66,7 +66,7 @@ UPDATE_SERVICE_FILE_func() {
 UPDATE_CLUSTER_FILE_func() {
     # Update start_cluster script
     if [[ $CLUSTER == 1 ]]; then
-        sed -i "s/NODE_BINARY\=[^<]*/NODE_BINARY\=$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
+        sed -i'.sed-bak' "s/NODE_BINARY\=[^<]*/NODE_BINARY\=$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" ceremonyclient_start_cluster.sh
     fi
 
     return 0
@@ -75,7 +75,7 @@ UPDATE_CLUSTER_FILE_func() {
 UPDATE_LAUNCHCTL_PLIST_FILE_func() {
     # Update launchctl plist file
     if [[ $CLUSTER == 1 ]]; then
-        sudo sed -i "s/node-[^<]*/node-$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" /Library/LaunchDaemons/local.ceremonyclient.plist
+        sudo sed -i'.sed-bak' "s/node-[^<]*/node-$NEW_LATEST_NODE_FILE_INSTALLED_FILENAME/" /Library/LaunchDaemons/local.ceremonyclient.plist
     fi
 
     return 0
@@ -84,7 +84,7 @@ UPDATE_LAUNCHCTL_PLIST_FILE_func() {
 UPDATE_LAUNCHCTL_PLIST_FILE_func() {
     # Update systemctl service file
     if [[ $CLUSTER == 1 ]]; then
-        sed -i "s/^ExecStart\=.*/c ExecStart\=$NEW_LATEST_NODE_FILE_INSTALLED_PATH/" /lib/systemd/system/ceremonyclient.service
+        sed -i'.sed-bak' "s/^ExecStart\=.*/c ExecStart\=$NEW_LATEST_NODE_FILE_INSTALLED_PATH/" /lib/systemd/system/ceremonyclient.service
     fi
 
     return 0
