@@ -399,6 +399,19 @@ EOF
     return
 }
 
+CONFIG_CHANGES_func() {
+    # Set maxFrames (frame truncation) to 1001 frames, to save on disk space
+    sudo sed -i'.sed-bak' -E 's|maxFrames: .*|maxFrames: 1001|' "$CEREMONYCLIENT_CONFIG_FILE"
+    # Set logfile
+    sudo sed -i'.sed-bak' -E "s|logFile: .*|logFile: \"$CEREMONYCLIENT_LOGFILE\"|" "$CEREMONYCLIENT_CONFIG_FILE"
+    # Enable gRPC
+    bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -g
+    bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -l
+    bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -p
+
+    return
+}
+
 ALTER_RELOAD_RESTART_DAEMONS_func() {
     NEW_LATEST_NODE_FILE_INSTALLED_PATH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet')
     NEW_LATEST_NODE_FILE_INSTALLED_FILENAME=$(echo "$NEW_LATEST_NODE_FILE_INSTALLED_PATH" | awk -F'/' '{print $NF}' | xargs)
@@ -415,14 +428,7 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
         sleep 60
 
         sudo launchctl stop system/local.ceremonyclient
-        # Set maxFrames (frame truncation) to 1001 frames, to save on disk space
-        sudo sed -i'.sed-bak' -E 's|maxFrames: .*|maxFrames: 1001|' "$CEREMONYCLIENT_CONFIG_FILE"
-        # Set logfile
-        sudo sed -i'.sed-bak' -E "s|logFile: .*|logFile: \"$CEREMONYCLIENT_LOGFILE\"|" "$CEREMONYCLIENT_CONFIG_FILE"
-        # Enable gRPC
-        bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -g
-        bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -l
-        bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -p
+        CONFIG_CHANGES_func
 
         # Use kickstart with the -k flag to kill any currently running ceremonyclient services,
         # and -p flag to print the PID of the service that starts up
@@ -450,15 +456,6 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
         echo "---- End of logs print ----"
         echo ""
     fi
-
-    return
-}
-
-CONFIG_CHANGES_func() {
-    # Enable gRPC
-    bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -g
-    bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -l
-    bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -p
 
     return
 }
@@ -595,8 +592,6 @@ INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func
 
 DOWNLOAD_INSTALL_BINARIES_func
 ALTER_RELOAD_RESTART_DAEMONS_func
-
-CONFIG_CHANGES_func
 
 FINISHING_TIPS_func
 
