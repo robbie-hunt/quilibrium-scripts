@@ -32,7 +32,7 @@ LINE_EXISTS_func() {
 # Function to add a line after a specific pattern
 ADD_LINE_AFTER_PATTERN_func() {
 #    sudo sed -i'.sed-bak' -E "/^ *$1:/a\ $2" "$3"
-    sudo sed -i '' -E "/^ *$1:/a\\
+    sudo sed -i'.sed-bak' -E "/^ *$1:/a\\
   $2
 " "$3"
     return
@@ -146,8 +146,8 @@ SETUP_PUBLIC_GRPC_func() {
     fi
 
     # Delete existing lines for listenGrpcMultiaddr and listenRESTMultiaddr if they exist
-    sudo sed -i '/^ *listenGrpcMultiaddr:/d' $CEREMONYCLIENT_CONFIG
-    sudo sed -i '/^ *listenRESTMultiaddr:/d' $CEREMONYCLIENT_CONFIG
+    sudo sed -i'.sed-bak'  -e '/^ *listenGrpcMultiaddr:/d' $CEREMONYCLIENT_CONFIG
+    sudo sed -i'.sed-bak'  -e '/^ *listenRESTMultiaddr:/d' $CEREMONYCLIENT_CONFIG
 
     # Add blank gRPC and local REST settings
     echo "listenGrpcMultiaddr: \"\"" | sudo tee -a $CEREMONYCLIENT_CONFIG > /dev/null || { if [[ $QUIET == 1 ]]; then :; else echo "Failed to set blank gRPC. Exiting..."; fi; return 1; }
@@ -200,8 +200,6 @@ LOCALENV="$SCRIPT_PARENT_DIR/.localenv"
 
 CEREMONYCLIENT_CONFIG=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_config')
 
-echo "CEREMONYCLIENT_CONFIG = $CEREMONYCLIENT_CONFIG"
-
 RELEASE_ARCH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -arch)
 RELEASE_OS=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
 RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
@@ -218,12 +216,12 @@ while getopts "xhqglp" opt; do
         l)
             SETUP_LOCAL_GRPC_func
             SETUP_STATS_COLLECTION_func
-            echo -e "\nConfiguration of local gRPC & REST complete."
+            echo -e "Configuration of local gRPC & REST complete."
             ;;
         p)
             SETUP_PUBLIC_GRPC_func
             SETUP_STATS_COLLECTION_func
-            echo -e "\nConfiguration of public gRPC complete."
+            echo -e "Configuration of public gRPC complete."
             ;;
         *) USAGE_func;;
     esac
