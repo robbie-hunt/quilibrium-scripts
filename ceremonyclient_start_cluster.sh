@@ -35,7 +35,7 @@ PARENT_PID=$$
 
 # Some variables for paths and binaries
 QUIL_NODE_PATH=$HOME/ceremonyclient/node
-NODE_BINARY="node-2.0.4.2-$RELEASE_LINE"
+NODE_BINARY=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet' | awk -F'/' '{print $NF}')
 
 
 
