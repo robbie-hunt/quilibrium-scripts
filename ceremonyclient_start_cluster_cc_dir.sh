@@ -37,7 +37,7 @@ PARENT_PID=$$
 QUIL_NODE_PATH=$(bash $QUIL_SCRIPTS_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_node_dir')
 NODE_CONFIG_DIR=$(bash $QUIL_SCRIPTS_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_config_dir')
 NODE_BINARY_NAME=$(bash $QUIL_SCRIPTS_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet' | awk -F'/' '{print $NF}')
-NODE_BINARY="$NODE_BINARY_NAME --config $NODE_CONFIG_DIR"
+NODE_BINARY="$NODE_BINARY_NAME"
 
 echo "NODE BINARY $NODE_BINARY"
 
@@ -100,7 +100,7 @@ pkill node-*
 
 # Function to start the master node up if this is master node
 start_master() {
-    $QUIL_NODE_PATH/$NODE_BINARY &
+    $QUIL_NODE_PATH/$NODE_BINARY --config $NODE_CONFIG_DIR &
     MASTER_PID=$!
 }
 
@@ -115,7 +115,7 @@ start_workers() {
     for ((i=0; i<DATA_WORKER_COUNT; i++)); do
         CORE=$((START_CORE_INDEX + i))
         echo "Starting core $CORE"
-        $QUIL_NODE_PATH/$NODE_BINARY --core $CORE --parent-process $PARENT_PID &
+        $QUIL_NODE_PATH/$NODE_BINARY --core $CORE --parent-process $PARENT_PID --config $NODE_CONFIG_DIR &
     done
 }
 
