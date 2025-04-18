@@ -37,7 +37,7 @@ PARENT_PID=$$
 QUIL_NODE_PATH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_node_dir')
 NODE_CONFIG_DIR=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_config_dir')
 NODE_BINARY_NAME=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet' | awk -F'/' '{print $NF}')
-NODE_BINARY="$NODE_BINARY --config $NODE_CONFIG_DIR"
+NODE_BINARY="$NODE_BINARY_NAME --config $NODE_CONFIG_DIR"
 
 
 # Parse command line arguments
