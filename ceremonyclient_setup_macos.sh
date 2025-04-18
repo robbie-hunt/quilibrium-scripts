@@ -328,6 +328,9 @@ BUILD_MAC_LAUNCHCTL_PLIST_FILE_func() {
         <true/>
     </dict>
 
+    <key>EnableTransactions</key>
+    <false/>
+
     <key>ExitTimeOut</key>
     <integer>30</integer>
 

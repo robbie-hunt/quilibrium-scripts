@@ -34,9 +34,10 @@ fi
 PARENT_PID=$$
 
 # Some variables for paths and binaries
-QUIL_NODE_PATH=$HOME/ceremonyclient/node
-NODE_BINARY=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet' | awk -F'/' '{print $NF}')
-
+QUIL_NODE_PATH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_node_dir')
+NODE_CONFIG_DIR=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_config_dir')
+NODE_BINARY_NAME=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet' | awk -F'/' '{print $NF}')
+NODE_BINARY="$NODE_BINARY --config $NODE_CONFIG_DIR"
 
 
 # Parse command line arguments

@@ -118,6 +118,7 @@ INITIALISE_LOCAL_ENV_func() {
         tee "$LOCALENV" > /dev/null <<EOF
 ceremonyclient_root_dir=$HOME/ceremonyclient
 ceremonyclient_node_dir=$HOME/ceremonyclient/node
+ceremonyclient_config_dir=$HOME/ceremonyclient/node/.config
 ceremonyclient_config=$HOME/ceremonyclient/node/.config/config.yml
 peer_id=
 node_release_url=https://releases.quilibrium.com/release
