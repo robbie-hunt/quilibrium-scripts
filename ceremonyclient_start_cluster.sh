@@ -89,9 +89,11 @@ CHECK_TAILSCALE_func() {
             IP_ADDRESSES_TO_PING=$(GATHER_WORKER_IPS_func | grep " - Master.*")
         fi
         for IP_ADDRESS_TO_PING in $IP_ADDRESSES_TO_PING; do
-
+            echo "IP_ADDRESS_TO_PING: $IP_ADDRESS_TO_PING"
             IP_ADDRESS=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $1}')
             MACHINE_INFO=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $2}')
+            echo "IP_ADDRESS: $IP_ADDRESS"
+            echo "MACHINE_INFO: $MACHINE_INFO"
             if [[ $(tailscale ping $IP_ADDRESS 2>/dev/null) ]]; then
                 echo "ceremonyclient_start_cluster.sh info: Successful Tailscale ping to node $IP_ADDRESS ($MACHINE_INFO)."
             else
