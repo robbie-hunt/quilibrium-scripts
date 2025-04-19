@@ -231,8 +231,6 @@ if [[ $TAILSCALE == 1 ]]; then
     fi
 fi
 
-exit 0
-
 MASTER_PID=0
 
 # kill off any stragglers
