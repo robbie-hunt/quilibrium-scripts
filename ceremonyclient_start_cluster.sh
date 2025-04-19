@@ -88,6 +88,7 @@ CHECK_TAILSCALE_func() {
         else
             IP_ADDRESSES_TO_PING=$(GATHER_WORKER_IPS_func | grep " - Master.*")
         fi
+        echo "IP_ADDRESSES_TO_PING: $IP_ADDRESSES_TO_PING"
         for IP_ADDRESS_TO_PING in $IP_ADDRESSES_TO_PING; do
             echo "IP_ADDRESS_TO_PING: $IP_ADDRESS_TO_PING"
             IP_ADDRESS=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $1}')
