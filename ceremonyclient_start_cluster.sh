@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set shell options
-set -eou pipefail
+set -ou pipefail
 #set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
 
 # Gracefully exit node when script is stopped
@@ -236,8 +236,6 @@ MASTER_PID=0
 # kill off any stragglers
 pgrep -a node-*
 pkill node-*
-
-exit 0
 
 if [ $START_CORE_INDEX -eq 1 ]; then
     START_MASTER_func
