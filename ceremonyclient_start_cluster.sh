@@ -220,7 +220,7 @@ if [[ $TAILSCALE == 1 ]]; then
                 TAILSCALE_NOT_CONNECTING=0
             else
                 echo "ceremonyclient_start_cluster.sh error: Tailscale connection check to master node failed (attempt $i/10). Retrying in 60 seconds..."
-                sleep 60
+                sleep 5
                 TAILSCALE_NOT_CONNECTING=1
             fi
         fi
