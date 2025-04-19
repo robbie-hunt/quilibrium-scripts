@@ -62,7 +62,7 @@ VALIDATE_DATA_WORKER_COUNT_func() {
     echo "ceremonyclient_start_cluster.sh info: Validated --data-worker-count."
 }
 
-CHECK_IF_MASTER_NODE_func() {
+CHECK_IF_IS_MASTER_NODE_func() {
     # Adjust DATA_WORKER_COUNT if START_CORE_INDEX is 1
     if [ "$START_CORE_INDEX" -eq 1 ]; then
         MASTER_NODE=1
@@ -94,7 +94,6 @@ CHECK_TAILSCALE_func() {
             MACHINE_INFO=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $2}')
             if tailscale ping -c 3 $IP_ADDRESS &>/dev/null; then
                 echo "ceremonyclient_start_cluster.sh info: Tailscale successfully pinged node $IP_ADDRESS ($MACHINE_INFO)."
-                return 0
             else
                 if [[ $MASTER_NODE == 1 ]]; then
                     echo "ceremonyclient_start_cluster.sh warning: Tailscale could not connect to slave node $IP_ADDRESS ($MACHINE_INFO). Continuing..."
@@ -209,7 +208,7 @@ DETERMINE_GOMAXPROCES_func
 VALIDATE_START_CORE_INDEX_func
 VALIDATE_DATA_WORKER_COUNT_func
 
-CHECK_IF_MASTER_NODE_func
+CHECK_IF_IS_MASTER_NODE_func
 if [[ $TAILSCALE == 1 ]]; then
     if [[ $MASTER_NODE == 1 ]]; then
         CHECK_TAILSCALE_func
