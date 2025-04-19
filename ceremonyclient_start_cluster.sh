@@ -234,7 +234,10 @@ fi
 MASTER_PID=0
 
 # kill off any stragglers
-#pkill node-*
+pgrep -a node-*
+pkill node-*
+
+exit 0
 
 if [ $START_CORE_INDEX -eq 1 ]; then
     START_MASTER_func
