@@ -231,10 +231,6 @@ if [[ $TAILSCALE == 1 ]]; then
     fi
 fi
 
-else
-    :
-fi
-
 exit 0
 
 MASTER_PID=0
