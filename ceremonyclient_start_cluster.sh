@@ -98,7 +98,7 @@ CHECK_TAILSCALE_func() {
             MACHINE_INFO=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $2}')
             echo "IP_ADDRESS: $IP_ADDRESS"
             echo "MACHINE_INFO: $MACHINE_INFO"
-            if [[ $(tailscale ping $IP_ADDRESS 2>/dev/null) ]]; then
+            if [[ $(tailscale ping -c 3 $IP_ADDRESS 2>/dev/null) ]]; then
                 echo "ceremonyclient_start_cluster.sh info: Successful Tailscale ping to node $IP_ADDRESS ($MACHINE_INFO)."
             else
                 if [[ $MASTER_NODE == 1 ]]; then
