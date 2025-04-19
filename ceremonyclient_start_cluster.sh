@@ -1,9 +1,10 @@
 #!/bin/bash
 
-set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
+#set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
 
 # Gracefully exit node when script is stopped
 kill_process() {
+    echo "ceremonyclient_start_cluster.sh info: Exiting the node gracefully..."
     pkill -SIGINT -P $$
     wait
     exit 0
@@ -39,11 +40,10 @@ NODE_CONFIG_DIR=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonycli
 NODE_BINARY_NAME=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet' | awk -F'/' '{print $NF}')
 NODE_BINARY="$NODE_BINARY_NAME --config $NODE_CONFIG_DIR"
 
-echo "NODE BINARY $NODE_BINARY"
-
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
+        x) set -x;;
         --core-index-start)
             START_CORE_INDEX="$2"
             shift 2
@@ -62,13 +62,13 @@ done
 
 # Validate START_CORE_INDEX
 if ! [[ "$START_CORE_INDEX" =~ ^[0-9]+$ ]]; then
-    echo "Error: --core-index-start must be a non-negative integer"
+    echo "ceremonyclient_start_cluster.sh error: --core-index-start must be a non-negative integer."
     exit 1
 fi
 
 # Validate DATA_WORKER_COUNT
 if ! [[ "$DATA_WORKER_COUNT" =~ ^[1-9][0-9]*$ ]]; then
-    echo "Error: --data-worker-count must be a positive integer"
+    echo "ceremonyclient_start_cluster.sh error: --data-worker-count must be a positive integer."
     exit 1
 fi
 
@@ -81,14 +81,14 @@ fi
 # Adjust DATA_WORKER_COUNT if START_CORE_INDEX is 1
 if [ "$START_CORE_INDEX" -eq 1 ]; then
     # Adjust MAX_CORES if START_CORE_INDEX is 1
-    echo "Adjusting max cores available to $((MAX_CORES - 1)) (from $MAX_CORES) due to starting the master node on core 0"
+    echo "ceremonyclient_start_cluster.sh info: Adjusting max cores available to $((MAX_CORES - 1)) (from $MAX_CORES) due to starting the master node on core 0."
     MAX_CORES=$((MAX_CORES - 1))
 fi
 
 # If DATA_WORKER_COUNT is greater than MAX_CORES, set it to MAX_CORES
 if [ "$DATA_WORKER_COUNT" -gt "$MAX_CORES" ]; then
     DATA_WORKER_COUNT=$MAX_CORES
-    echo "DATA_WORKER_COUNT adjusted down to maximum: $DATA_WORKER_COUNT"
+    echo "ceremonyclient_start_cluster.sh info: DATA_WORKER_COUNT adjusted down to maximum: $DATA_WORKER_COUNT."
 fi
 
 MASTER_PID=0
@@ -100,6 +100,7 @@ pkill node-*
 
 # Function to start the master node up if this is master node
 start_master() {
+    echo "ceremonyclient_start_cluster.sh info: Starting master node..."
     $QUIL_NODE_PATH/$NODE_BINARY &
     MASTER_PID=$!
 }
@@ -111,10 +112,11 @@ fi
 # Function to start the data workers if this is a worker node
 # Loops through the data worker count and start each core
 start_workers() {
+    echo "ceremonyclient_start_cluster.sh info: Starting worker nodes..."
     # start the master node
     for ((i=0; i<DATA_WORKER_COUNT; i++)); do
         CORE=$((START_CORE_INDEX + i))
-        echo "Starting core $CORE"
+        echo "ceremonyclient_start_cluster.sh info: Starting core $CORE."
         $QUIL_NODE_PATH/$NODE_BINARY --core $CORE --parent-process $PARENT_PID &
     done
 }
@@ -131,7 +133,7 @@ do
   # we only care about restarting the master process because the cores should be alive
   # as long as this file is running (and this will only run on the machine with a start index of 1)
   if [ $START_CORE_INDEX -eq 1 ] && ! is_master_process_running; then
-    echo "Process crashed or stopped. restarting..."
+    echo "ceremonyclient_start_cluster.sh error: Process crashed or stopped; restarting..."
     start_master
   fi
   sleep 440
