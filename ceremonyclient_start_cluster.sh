@@ -12,8 +12,6 @@ KILL_PROCESS_func() {
     exit 0
 }
 
-tailscale ping -c 3 100.96.57.55 2>/dev/null
-
 trap KILL_PROCESS_func SIGINT
 
 USAGE_func() {
@@ -81,12 +79,27 @@ GATHER_WORKER_IPS_func() {
 }
 
 CHECK_TAILSCALE_func() {
-    tailscale ping -c 3 100.96.57.55 2>/dev/null
-    if [[ $(tailscale status) == "Tailscale is stopped." ]]; then
+    if tailscale version &>/dev/null; then
+        :
+    else
+        if /usr/local/bin/tailscale version &>/dev/null; then
+            TAILSCALE_PATH_NEEDS_TO_BE_HARDCODED=1
+        else
+            echo "ceremonyclient_start_cluster.sh error: Tailscale is not available in the CLI."
+            echo "                                       Either install the Tailscale CLI via the Tailscale Settings,"
+            echo "                                       or run 'which tailscale' and hardcode the correct tailscale path into this script."
+        fi
+    fi
+
+    if [[ $TAILSCALE_PATH_NEEDS_TO_BE_HARDCODED == 1 ]]; then
+        TAILSCALE_STATUS=$(/usr/local/bin/tailscale status)
+    else
+        TAILSCALE_STATUS_RESULT=$(tailscale status)
+    fi
+    if [[ $TAILSCALE_STATUS_RESULT == "Tailscale is stopped." ]]; then
         echo "ceremonyclient_start_cluster.sh error: Tailscale is not running. Please connect Tailscale."
         exit 1
     else
-        tailscale ping -c 3 100.96.57.55 2>/dev/null
         IP_ADDRESSES_TOTAL=$(GATHER_WORKER_IPS_func)
         if [[ $MASTER_NODE == 1 ]]; then
             IP_ADDRESSES_TO_PING=$(echo "$IP_ADDRESSES_TOTAL" | grep -v " - Master.*")
@@ -96,8 +109,12 @@ CHECK_TAILSCALE_func() {
         while IFS= read -r IP_ADDRESS_TO_PING; do
             IP_ADDRESS=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $1}')
             MACHINE_INFO=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $2}')
-            PING_OUTPUT=$(tailscale ping -c 3 $IP_ADDRESS 2>/dev/null)
-            if [[ $(tailscale ping -c 3 $IP_ADDRESS 2>/dev/null) == "pong"* ]]; then
+            if [[ $TAILSCALE_PATH_NEEDS_TO_BE_HARDCODED == 1 ]]; then
+                TAILSCALE_PING_RESULT=$(/usr/local/bin/tailscale ping -c 3 $IP_ADDRESS 2>/dev/null)
+            else
+                TAILSCALE_PING_RESULT=$(tailscale ping -c 3 $IP_ADDRESS 2>/dev/null)
+            fi
+            if [[ $TAILSCALE_PING_RESULT == "pong"* ]]; then
                 echo "ceremonyclient_start_cluster.sh info: Tailscale successfully pinged node $IP_ADDRESS ($MACHINE_INFO)."
             else
                 if [[ $MASTER_NODE == 1 ]]; then
@@ -165,6 +182,7 @@ PARENT_PID=$$
 
 TAILSCALE=0
 TAILSCALE_NOT_CONNECTING=0
+TAILSCALE_PATH_NEEDS_TO_BE_HARDCODED=0
 
 QUIET=0
 
