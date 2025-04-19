@@ -36,6 +36,7 @@ VALIDATE_START_CORE_INDEX_func() {
         echo "ceremonyclient_start_cluster.sh error: --core-index-start must be a non-negative integer."
         exit 1
     fi
+    echo "ceremonyclient_start_cluster.sh info: Validated --core-index-start."
 }
 
 DETERMINE_GOMAXPROCES_func() {
@@ -53,12 +54,12 @@ VALIDATE_DATA_WORKER_COUNT_func() {
         echo "ceremonyclient_start_cluster.sh error: --data-worker-count must be a positive integer."
         exit 1
     fi
-
     # If DATA_WORKER_COUNT is greater than MAX_CORES, set it to MAX_CORES
     if [ "$DATA_WORKER_COUNT" -gt "$MAX_CORES" ]; then
         DATA_WORKER_COUNT=$MAX_CORES
-        echo "ceremonyclient_start_cluster.sh info: DATA_WORKER_COUNT adjusted down to maximum (MAX_CORES): $DATA_WORKER_COUNT."
+        echo "ceremonyclient_start_cluster.sh info: --data-worker-count adjusted down to maximum (MAX_CORES): $DATA_WORKER_COUNT."
     fi
+    echo "ceremonyclient_start_cluster.sh info: Validated --data-worker-count."
 }
 
 CHECK_IF_MASTER_NODE_func() {
@@ -66,7 +67,7 @@ CHECK_IF_MASTER_NODE_func() {
     if [ "$START_CORE_INDEX" -eq 1 ]; then
         MASTER_NODE=1
         # Adjust MAX_CORES if START_CORE_INDEX is 1
-        echo "ceremonyclient_start_cluster.sh info: Adjusting max cores available to $((MAX_CORES - 1)) (from $MAX_CORES) due to starting the master node on core 0."
+        echo "ceremonyclient_start_cluster.sh info: This is a master node. Adjusting max cores available to $((MAX_CORES - 1)) (from $MAX_CORES) due to starting the master node on core 0."
         MAX_CORES=$((MAX_CORES - 1))
     fi
 }
@@ -91,10 +92,10 @@ CHECK_TAILSCALE_func() {
             IP_ADDRESS=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $1}')
             MACHINE_INFO=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $2}')
             if [[ $(tailscale ping $IP_ADDRESS 2>/dev/null) ]]; then
-                :
+                echo "ceremonyclient_start_cluster.sh info: Successful Tailscale ping to node $IP_ADDRESS ($MACHINE_INFO)."
             else
                 if [[ $MASTER_NODE == 1 ]]; then
-                    echo "ceremonyclient_start_cluster.sh error: Tailscale could not connect to node $IP_ADDRESS ($MACHINE_INFO)."
+                    echo "ceremonyclient_start_cluster.sh error: Tailscale could not connect to node $IP_ADDRESS ($MACHINE_INFO). Continuing..."
                 else
                     echo "ceremonyclient_start_cluster.sh error: Tailscale could not connect to node $IP_ADDRESS ($MACHINE_INFO). Exiting..."
                     exit 1
@@ -206,7 +207,11 @@ VALIDATE_START_CORE_INDEX_func
 VALIDATE_DATA_WORKER_COUNT_func
 
 CHECK_IF_MASTER_NODE_func
-CHECK_TAILSCALE_func
+if [[ $TAILSCALE == 1 ]]; then
+    CHECK_TAILSCALE_func
+else
+    :
+fi
 
 exit 0
 
