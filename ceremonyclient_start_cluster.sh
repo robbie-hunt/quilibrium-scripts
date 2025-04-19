@@ -12,7 +12,7 @@ KILL_PROCESS_func() {
     exit 0
 }
 
-tailscale ping -c 3 $IP_ADDRESS 2>/dev/null
+tailscale ping -c 3 100.96.57.55 2>/dev/null
 
 trap KILL_PROCESS_func SIGINT
 
@@ -81,12 +81,12 @@ GATHER_WORKER_IPS_func() {
 }
 
 CHECK_TAILSCALE_func() {
-    tailscale ping -c 3 $IP_ADDRESS 2>/dev/null
+    tailscale ping -c 3 100.96.57.55 2>/dev/null
     if [[ $(tailscale status) == "Tailscale is stopped." ]]; then
         echo "ceremonyclient_start_cluster.sh error: Tailscale is not running. Please connect Tailscale."
         exit 1
     else
-        tailscale ping -c 3 $IP_ADDRESS 2>/dev/null
+        tailscale ping -c 3 100.96.57.55 2>/dev/null
         IP_ADDRESSES_TOTAL=$(GATHER_WORKER_IPS_func)
         if [[ $MASTER_NODE == 1 ]]; then
             IP_ADDRESSES_TO_PING=$(echo "$IP_ADDRESSES_TOTAL" | grep -v " - Master.*")
