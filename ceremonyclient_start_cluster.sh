@@ -94,12 +94,14 @@ CHECK_TAILSCALE_func() {
             MACHINE_INFO=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $2}')
             if tailscale ping -c 3 $IP_ADDRESS &>/dev/null; then
                 echo "ceremonyclient_start_cluster.sh info: Tailscale successfully pinged node $IP_ADDRESS ($MACHINE_INFO)."
+                return 0
             else
                 if [[ $MASTER_NODE == 1 ]]; then
                     echo "ceremonyclient_start_cluster.sh error: Tailscale could not connect to slave node $IP_ADDRESS ($MACHINE_INFO). Continuing..."
                 else
                     echo "ceremonyclient_start_cluster.sh error: Tailscale could not connect to master node $IP_ADDRESS ($MACHINE_INFO)."
                 fi
+                return 1
             fi
         done <<< "$IP_ADDRESSES_TO_PING"
     fi
