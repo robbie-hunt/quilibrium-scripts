@@ -23,7 +23,7 @@ USAGE_func() {
     echo "       -h                     Display this help dialogue."
     echo "       -x                     For debugging the script; sets the x shell builtin, 'set -x'."
     echo "       -q                     Quiet mode."
-    echo "       --tailscale            Script will make sure tailscale is connected before starting node processes."
+    echo "       --check-tailscale      Script will make sure tailscale is connected before starting node processes."
     echo "       --core-index-start     Cluster core index start."
     echo "       --data-worker-count    Cluster data worker count."
     echo ""
@@ -84,26 +84,21 @@ CHECK_TAILSCALE_func() {
         exit 1
     else
         IP_ADDRESSES_TOTAL=$(GATHER_WORKER_IPS_func)
-        echo "IP_ADDRESSES_TOTAL $IP_ADDRESSES_TOTAL"
         if [[ $MASTER_NODE == 1 ]]; then
             IP_ADDRESSES_TO_PING=$(echo "$IP_ADDRESSES_TOTAL" | grep -v " - Master.*")
         else
             IP_ADDRESSES_TO_PING=$(echo "$IP_ADDRESSES_TOTAL" | grep " - Master.*")
         fi
-        echo "IP_ADDRESSES_TO_PING: $IP_ADDRESSES_TO_PING"
         while IFS= read -r IP_ADDRESS_TO_PING; do
-            echo "IP_ADDRESS_TO_PING: $IP_ADDRESS_TO_PING"
             IP_ADDRESS=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $1}')
             MACHINE_INFO=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $2}')
-            echo "IP_ADDRESS: $IP_ADDRESS"
-            echo "MACHINE_INFO: $MACHINE_INFO"
             if tailscale ping -c 3 $IP_ADDRESS &>/dev/null; then
-                echo "ceremonyclient_start_cluster.sh info: Successful Tailscale ping to node $IP_ADDRESS ($MACHINE_INFO)."
+                echo "ceremonyclient_start_cluster.sh info: Tailscale successfully pinged node $IP_ADDRESS ($MACHINE_INFO)."
             else
                 if [[ $MASTER_NODE == 1 ]]; then
-                    echo "ceremonyclient_start_cluster.sh error: Tailscale could not connect to node $IP_ADDRESS ($MACHINE_INFO). Continuing..."
+                    echo "ceremonyclient_start_cluster.sh error: Tailscale could not connect to slave node $IP_ADDRESS ($MACHINE_INFO). Continuing..."
                 else
-                    echo "ceremonyclient_start_cluster.sh error: Tailscale could not connect to node $IP_ADDRESS ($MACHINE_INFO). Exiting..."
+                    echo "ceremonyclient_start_cluster.sh error: Tailscale could not connect to master node $IP_ADDRESS ($MACHINE_INFO)."
                     exit 1
                 fi
             fi
@@ -164,6 +159,7 @@ fi
 PARENT_PID=$$
 
 TAILSCALE=0
+TAILSCALE_NOT_CONNECTING=0
 
 QUIET=0
 
@@ -197,7 +193,7 @@ while [[ $# -gt 0 ]]; do
             DATA_WORKER_COUNT="$2"
             shift 2
             ;;
-        --tailscale)
+        --check-tailscale)
             TAILSCALE=1
             shift 1
             ;;
@@ -214,7 +210,27 @@ VALIDATE_DATA_WORKER_COUNT_func
 
 CHECK_IF_MASTER_NODE_func
 if [[ $TAILSCALE == 1 ]]; then
-    CHECK_TAILSCALE_func
+    if [[ $MASTER_NODE == 1 ]]; then
+        CHECK_TAILSCALE_func
+    else
+        # If Tailscale check fails on a slave node, try again every minute for 10 mins
+        for i in {1..10}; do
+            if CHECK_TAILSCALE_func; then
+                break  # success, exit the loop
+                TAILSCALE_NOT_CONNECTING=0
+            else
+                echo "ceremonyclient_start_cluster.sh error: Tailscale connection check to master node failed (attempt $i/10). Retrying in 60 seconds..."
+                sleep 60
+                TAILSCALE_NOT_CONNECTING=1
+            fi
+        fi
+        if [[ $TAILSCALE_NOT_CONNECTING == 1 ]]; then
+            echo "ceremonyclient_start_cluster.sh error: Tailscale connection check to master node failed after 10 attempts. Exiting..."
+            exit 1
+        fi
+    fi
+done
+
 else
     :
 fi
