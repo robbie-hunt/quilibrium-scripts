@@ -73,7 +73,7 @@ CHECK_IF_MASTER_NODE_func() {
 }
 
 GATHER_WORKER_IPS_func() {
-    awk '/dataWorkerMultiaddrs:/ {in_block=1; next} in_block && /^[^[:space:]-]/ {exit} in_block {print}' $NODE_CONFIG_FILE \
+    awk '/dataWorkerMultiaddrs:/ {in_block=1; next} in_block && /^[^ ]/ {in_block=0} in_block && /^  -/ {print}' $NODE_CONFIG_FILE \
     | grep "^  - .*" \
     | awk '{ if ($0 ~ /\/ip4\//) { n = split($0, arr, "/"); ip = arr[3]; comment = substr($0, index($0, "#") + 2); if (!(ip in seen)) { seen[ip] = comment } } } END { for (ip in seen) { print ip " - " seen[ip] } }'
 }
