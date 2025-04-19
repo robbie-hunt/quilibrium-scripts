@@ -83,10 +83,12 @@ CHECK_TAILSCALE_func() {
         echo "ceremonyclient_start_cluster.sh error: Tailscale is not running. Please connect Tailscale."
         exit 1
     else
+        IP_ADDRESSES_TOTAL=$(GATHER_WORKER_IPS_func)
+        echo "IP_ADDRESSES_TOTAL $IP_ADDRESSES_TOTAL"
         if [[ $MASTER_NODE == 1 ]]; then
-            IP_ADDRESSES_TO_PING=$(GATHER_WORKER_IPS_func | grep -v " - Master.*")
+            IP_ADDRESSES_TO_PING=$(echo "$IP_ADDRESSES_TOTAL" | grep -v " - Master.*")
         else
-            IP_ADDRESSES_TO_PING=$(GATHER_WORKER_IPS_func | grep " - Master.*")
+            IP_ADDRESSES_TO_PING=$(echo "$IP_ADDRESSES_TOTAL" | grep " - Master.*")
         fi
         echo "IP_ADDRESSES_TO_PING: $IP_ADDRESSES_TO_PING"
         for IP_ADDRESS_TO_PING in $IP_ADDRESSES_TO_PING; do
