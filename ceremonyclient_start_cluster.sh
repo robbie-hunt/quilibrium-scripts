@@ -96,7 +96,7 @@ CHECK_TAILSCALE_func() {
                 echo "ceremonyclient_start_cluster.sh info: Tailscale successfully pinged node $IP_ADDRESS ($MACHINE_INFO)."
             else
                 if [[ $MASTER_NODE == 1 ]]; then
-                    echo "ceremonyclient_start_cluster.sh warning: Tailscale could not connect to slave node $IP_ADDRESS ($MACHINE_INFO). Continuing..."
+                    echo "ceremonyclient_start_cluster.sh warning: Tailscale could not connect to slave node $IP_ADDRESS ($MACHINE_INFO). Continuing anyway..."
                 else
                     echo "ceremonyclient_start_cluster.sh error: Tailscale could not connect to master node $IP_ADDRESS ($MACHINE_INFO)."
                 fi
