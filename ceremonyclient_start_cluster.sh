@@ -223,7 +223,7 @@ if [[ $TAILSCALE == 1 ]]; then
                 sleep 5
                 TAILSCALE_NOT_CONNECTING=1
             fi
-        fi
+        done
         if [[ $TAILSCALE_NOT_CONNECTING == 1 ]]; then
             echo "ceremonyclient_start_cluster.sh error: Tailscale connection check to master node failed after 10 attempts. Exiting..."
             exit 1
