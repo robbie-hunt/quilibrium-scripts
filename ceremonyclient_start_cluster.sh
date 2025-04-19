@@ -97,7 +97,7 @@ CHECK_TAILSCALE_func() {
                 return 0
             else
                 if [[ $MASTER_NODE == 1 ]]; then
-                    echo "ceremonyclient_start_cluster.sh error: Tailscale could not connect to slave node $IP_ADDRESS ($MACHINE_INFO). Continuing..."
+                    echo "ceremonyclient_start_cluster.sh warning: Tailscale could not connect to slave node $IP_ADDRESS ($MACHINE_INFO). Continuing..."
                 else
                     echo "ceremonyclient_start_cluster.sh error: Tailscale could not connect to master node $IP_ADDRESS ($MACHINE_INFO)."
                 fi
@@ -220,7 +220,7 @@ if [[ $TAILSCALE == 1 ]]; then
                 break  # success, exit the loop
                 TAILSCALE_NOT_CONNECTING=0
             else
-                echo "ceremonyclient_start_cluster.sh error: Tailscale connection check to master node failed (attempt $i/10). Retrying in 60 seconds..."
+                echo "ceremonyclient_start_cluster.sh warning: Tailscale connection check to master node failed (attempt $i/10). Retrying in 60 seconds..."
                 sleep 5
                 TAILSCALE_NOT_CONNECTING=1
             fi
@@ -250,7 +250,7 @@ do
   # we only care about restarting the master process because the cores should be alive
   # as long as this file is running (and this will only run on the machine with a start index of 1)
   if [ $START_CORE_INDEX -eq 1 ] && ! IS_MASTER_PROCESS_RUNNING_func; then
-    echo "ceremonyclient_start_cluster.sh error: Process crashed or stopped; restarting..."
+    echo "ceremonyclient_start_cluster.sh error: Master node process crashed or stopped; restarting..."
     START_MASTER_func
   fi
   sleep 440
