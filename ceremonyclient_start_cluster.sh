@@ -92,7 +92,7 @@ CHECK_TAILSCALE_func() {
     fi
 
     if [[ $TAILSCALE_PATH_NEEDS_TO_BE_HARDCODED == 1 ]]; then
-        TAILSCALE_STATUS=$(/usr/local/bin/tailscale status)
+        TAILSCALE_STATUS_RESULT=$(/usr/local/bin/tailscale status)
     else
         TAILSCALE_STATUS_RESULT=$(tailscale status)
     fi
