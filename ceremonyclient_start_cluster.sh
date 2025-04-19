@@ -84,11 +84,12 @@ CHECK_TAILSCALE_func() {
         exit 1
     else
         if [[ $MASTER_NODE == 1 ]]; then
-            IP_ADDRESSES_TO_PING=$(GATHER_WORKER_IPS_func | grep -v " - Master.*" | awk -F' - ' '{print $1}')
+            IP_ADDRESSES_TO_PING=$(GATHER_WORKER_IPS_func | grep -v " - Master.*")
         else
-            IP_ADDRESSES_TO_PING=$(GATHER_WORKER_IPS_func | grep " - Master.*" | awk -F' - ' '{print $1}')
+            IP_ADDRESSES_TO_PING=$(GATHER_WORKER_IPS_func | grep " - Master.*")
         fi
         for IP_ADDRESS_TO_PING in $IP_ADDRESSES_TO_PING; do
+
             IP_ADDRESS=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $1}')
             MACHINE_INFO=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $2}')
             if [[ $(tailscale ping $IP_ADDRESS 2>/dev/null) ]]; then
