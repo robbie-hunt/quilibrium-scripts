@@ -12,6 +12,8 @@ KILL_PROCESS_func() {
     exit 0
 }
 
+tailscale ping -c 3 $IP_ADDRESS 2>/dev/null
+
 trap KILL_PROCESS_func SIGINT
 
 USAGE_func() {
@@ -79,10 +81,12 @@ GATHER_WORKER_IPS_func() {
 }
 
 CHECK_TAILSCALE_func() {
+    tailscale ping -c 3 $IP_ADDRESS 2>/dev/null
     if [[ $(tailscale status) == "Tailscale is stopped." ]]; then
         echo "ceremonyclient_start_cluster.sh error: Tailscale is not running. Please connect Tailscale."
         exit 1
     else
+        tailscale ping -c 3 $IP_ADDRESS 2>/dev/null
         IP_ADDRESSES_TOTAL=$(GATHER_WORKER_IPS_func)
         if [[ $MASTER_NODE == 1 ]]; then
             IP_ADDRESSES_TO_PING=$(echo "$IP_ADDRESSES_TOTAL" | grep -v " - Master.*")
@@ -92,7 +96,8 @@ CHECK_TAILSCALE_func() {
         while IFS= read -r IP_ADDRESS_TO_PING; do
             IP_ADDRESS=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $1}')
             MACHINE_INFO=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $2}')
-            if tailscale ping -c 3 $IP_ADDRESS 2>&1 | grep -q "^pong"; then
+            PING_OUTPUT=$(tailscale ping -c 3 $IP_ADDRESS 2>/dev/null)
+            if [[ $(tailscale ping -c 3 $IP_ADDRESS 2>/dev/null) == "pong"* ]]; then
                 echo "ceremonyclient_start_cluster.sh info: Tailscale successfully pinged node $IP_ADDRESS ($MACHINE_INFO)."
             else
                 if [[ $MASTER_NODE == 1 ]]; then
