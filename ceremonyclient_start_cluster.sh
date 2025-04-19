@@ -91,7 +91,8 @@ CHECK_TAILSCALE_func() {
             IP_ADDRESSES_TO_PING=$(echo "$IP_ADDRESSES_TOTAL" | grep " - Master.*")
         fi
         echo "IP_ADDRESSES_TO_PING: $IP_ADDRESSES_TO_PING"
-        for IP_ADDRESS_TO_PING in $IP_ADDRESSES_TO_PING; do
+        #for IP_ADDRESS_TO_PING in $IP_ADDRESSES_TO_PING; do
+        while IFS= read -r IP_ADDRESS_TO_PING; do
             echo "IP_ADDRESS_TO_PING: $IP_ADDRESS_TO_PING"
             IP_ADDRESS=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $1}')
             MACHINE_INFO=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $2}')
@@ -107,7 +108,8 @@ CHECK_TAILSCALE_func() {
                     exit 1
                 fi
             fi
-        done
+        done <<< "$IP_ADDRESSES_TO_PING"
+        #done
     fi
 }
 
