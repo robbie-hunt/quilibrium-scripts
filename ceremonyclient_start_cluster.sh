@@ -6,7 +6,7 @@ set -ou pipefail
 
 # Gracefully exit node when script is stopped
 KILL_PROCESS_func() {
-    echo "ceremonyclient_start_cluster.sh info: Exiting the node gracefully..."
+    echo "ceremonyclient_start_cluster.sh info [$(date)]: Exiting the node gracefully..."
     pkill -SIGINT -P $$
     wait
     exit 0
@@ -33,10 +33,10 @@ USAGE_func() {
 VALIDATE_START_CORE_INDEX_func() {
     # Validate the START_CORE_INDEX input
     if ! [[ "$START_CORE_INDEX" =~ ^[0-9]+$ ]]; then
-        echo "ceremonyclient_start_cluster.sh error: --core-index-start must be a non-negative integer."
+        echo "ceremonyclient_start_cluster.sh error [$(date)]: --core-index-start must be a non-negative integer."
         exit 1
     fi
-    echo "ceremonyclient_start_cluster.sh info: Validated --core-index-start."
+    echo "ceremonyclient_start_cluster.sh info [$(date)]: Validated --core-index-start."
 }
 
 DETERMINE_GOMAXPROCES_func() {
@@ -51,15 +51,15 @@ DETERMINE_GOMAXPROCES_func() {
 VALIDATE_DATA_WORKER_COUNT_func() {
     # Validate the DATA_WORKER_COUNT input
     if ! [[ "$DATA_WORKER_COUNT" =~ ^[1-9][0-9]*$ ]]; then
-        echo "ceremonyclient_start_cluster.sh error: --data-worker-count must be a positive integer."
+        echo "ceremonyclient_start_cluster.sh error [$(date)]: --data-worker-count must be a positive integer."
         exit 1
     fi
     # If DATA_WORKER_COUNT is greater than MAX_CORES, set it to MAX_CORES
     if [ "$DATA_WORKER_COUNT" -gt "$MAX_CORES" ]; then
         DATA_WORKER_COUNT=$MAX_CORES
-        echo "ceremonyclient_start_cluster.sh info: --data-worker-count adjusted down to maximum (MAX_CORES): $DATA_WORKER_COUNT."
+        echo "ceremonyclient_start_cluster.sh info [$(date)]: --data-worker-count adjusted down to maximum (MAX_CORES): $DATA_WORKER_COUNT."
     fi
-    echo "ceremonyclient_start_cluster.sh info: Validated --data-worker-count."
+    echo "ceremonyclient_start_cluster.sh info [$(date)]: Validated --data-worker-count."
 }
 
 CHECK_IF_IS_MASTER_NODE_func() {
@@ -67,7 +67,7 @@ CHECK_IF_IS_MASTER_NODE_func() {
     if [ "$START_CORE_INDEX" -eq 1 ]; then
         MASTER_NODE=1
         # Adjust MAX_CORES if START_CORE_INDEX is 1
-        echo "ceremonyclient_start_cluster.sh info: This is a master node. Adjusting max cores available to $((MAX_CORES - 1)) (from $MAX_CORES) due to starting the master node on core 0."
+        echo "ceremonyclient_start_cluster.sh info [$(date)]: This is a master node. Adjusting max cores available to $((MAX_CORES - 1)) (from $MAX_CORES) due to starting the master node on core 0."
         MAX_CORES=$((MAX_CORES - 1))
     fi
 }
@@ -94,12 +94,12 @@ CHECK_TAILSCALE_PING_CONNECTIONS_func() {
             TAILSCALE_PING_RESULT=$(tailscale ping -c 3 $IP_ADDRESS 2>/dev/null)
         fi
         if [[ $TAILSCALE_PING_RESULT == "pong"* ]]; then
-            echo "ceremonyclient_start_cluster.sh info: Tailscale successfully pinged node $IP_ADDRESS ($MACHINE_INFO)."
+            echo "ceremonyclient_start_cluster.sh info [$(date)]: Tailscale successfully pinged node $IP_ADDRESS ($MACHINE_INFO)."
         else
             if [[ $MASTER_NODE == 1 ]]; then
-                echo "ceremonyclient_start_cluster.sh warning: Tailscale could not connect to slave node $IP_ADDRESS ($MACHINE_INFO). Continuing anyway..."
+                echo "ceremonyclient_start_cluster.sh warning [$(date)]: Tailscale could not connect to slave node $IP_ADDRESS ($MACHINE_INFO). Continuing anyway..."
             else
-                echo "ceremonyclient_start_cluster.sh error: Tailscale could not connect to master node $IP_ADDRESS ($MACHINE_INFO)."
+                echo "ceremonyclient_start_cluster.sh error [$(date)]: Tailscale could not connect to master node $IP_ADDRESS ($MACHINE_INFO)."
                 return 1
             fi
         fi
@@ -107,13 +107,16 @@ CHECK_TAILSCALE_PING_CONNECTIONS_func() {
 }
 
 CHECK_TAILSCALE_func() {
+    # This whole section of checking if Tailscale needs to be hardcoded is because launchctl
+    # might be running the node on macOS, and for some reason it doesn't recognise some commands,
+    # and needs them hardcoded in
     if tailscale version &>/dev/null; then
         :
     else
         if /usr/local/bin/tailscale version &>/dev/null; then
             TAILSCALE_PATH_NEEDS_TO_BE_HARDCODED=1
         else
-            echo "ceremonyclient_start_cluster.sh error: Tailscale is not available in the CLI."
+            echo "ceremonyclient_start_cluster.sh error [$(date)]: Tailscale is not available in the CLI."
             echo "                                       Either install the Tailscale CLI via the Tailscale Settings,"
             echo "                                       or run 'which tailscale' and hardcode the correct tailscale path into this script."
         fi
@@ -133,7 +136,7 @@ CHECK_TAILSCALE_func() {
         fi
         if [[ $TAILSCALE_STATUS_RESULT == "Tailscale is stopped." ]]; then
             TAILSCALE_NOT_RUNNING=1
-            echo "ceremonyclient_start_cluster.sh warning: Tailscale is not running (attempt $i/10). Retrying check in 60 seconds..."
+            echo "ceremonyclient_start_cluster.sh warning [$(date)]: Tailscale is not running (attempt $i/10). Retrying check in 60 seconds..."
             sleep 60
         else
             TAILSCALE_NOT_RUNNING=0
@@ -141,9 +144,13 @@ CHECK_TAILSCALE_func() {
         fi
     done
     if [[ $TAILSCALE_NOT_RUNNING == 1 ]]; then
-        echo "ceremonyclient_start_cluster.sh error: Tailscale status check failed after 10 attempts. Exiting..."
+        echo "ceremonyclient_start_cluster.sh error [$(date)]: Tailscale status check failed after 10 attempts. Exiting..."
         exit 1
     fi
+
+    # Give a bit of time between Tailscale running and it connecting to other nodes
+    sleep 30
+
     # If Tailscale ping check fails on a slave node, try again every minute for 10 mins
     if [[ $MASTER_NODE == 1 ]]; then
         CHECK_TAILSCALE_PING_CONNECTIONS_func
@@ -154,12 +161,12 @@ CHECK_TAILSCALE_func() {
                 break  # success, exit the loop
             else
                 TAILSCALE_NOT_CONNECTING=1
-                echo "ceremonyclient_start_cluster.sh warning: Tailscale connection check to master node failed (attempt $i/10). Retrying in 60 seconds..."
+                echo "ceremonyclient_start_cluster.sh warning [$(date)]: Tailscale connection check to master node failed (attempt $i/10). Retrying in 60 seconds..."
                 sleep 60
             fi
         done
         if [[ $TAILSCALE_NOT_CONNECTING == 1 ]]; then
-            echo "ceremonyclient_start_cluster.sh error: Tailscale connection check to master node failed after 10 attempts. Exiting..."
+            echo "ceremonyclient_start_cluster.sh error [$(date)]: Tailscale connection check to master node failed after 10 attempts. Exiting..."
             exit 1
         fi
     fi
@@ -167,7 +174,7 @@ CHECK_TAILSCALE_func() {
 
 # Function to start the master node up if this is master node
 START_MASTER_func() {
-    echo "ceremonyclient_start_cluster.sh info: Starting master node..."
+    echo "ceremonyclient_start_cluster.sh info [$(date)]: Starting master node..."
     $QUIL_NODE_PATH/$NODE_BINARY &
     MASTER_PID=$!
 }
@@ -175,11 +182,11 @@ START_MASTER_func() {
 # Function to start the data workers if this is a worker node
 # Loops through the data worker count and start each core
 START_WORKERS_func() {
-    echo "ceremonyclient_start_cluster.sh info: Starting worker nodes..."
+    echo "ceremonyclient_start_cluster.sh info [$(date)]: Starting worker nodes..."
     # start the master node
     for ((i=0; i<DATA_WORKER_COUNT; i++)); do
         CORE=$((START_CORE_INDEX + i))
-        echo "ceremonyclient_start_cluster.sh info: Starting core $CORE."
+        echo "ceremonyclient_start_cluster.sh info [$(date)]: Starting core $CORE."
         $QUIL_NODE_PATH/$NODE_BINARY --core $CORE --parent-process $PARENT_PID &
     done
 }
@@ -287,7 +294,7 @@ do
   # we only care about restarting the master process because the cores should be alive
   # as long as this file is running (and this will only run on the machine with a start index of 1)
   if [ $START_CORE_INDEX -eq 1 ] && ! IS_MASTER_PROCESS_RUNNING_func; then
-    echo "ceremonyclient_start_cluster.sh error: Master node process crashed or stopped; restarting..."
+    echo "ceremonyclient_start_cluster.sh error [$(date)]: Master node process crashed or stopped; restarting..."
     START_MASTER_func
   fi
   sleep 440
