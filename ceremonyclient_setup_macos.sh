@@ -463,6 +463,20 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
     return
 }
 
+VIEW_LOGS_SCRIPT_ON_DESKTOP_func() {
+    tee /Users/$USER/Desktop/ceremonyclient_view_logs.command > /dev/null <<EOF
+#!/bin/bash
+
+# Set shell options
+set -eou pipefail
+#set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
+
+tail -F $CEREMONYCLIENT_LOGFILE
+EOF
+
+    chmod ugo+x /Users/$USER/Desktop/ceremonyclient_view_logs.command
+}
+
 FINISHING_TIPS_func() {
     echo ""
     echo "Finishing tips:"
@@ -471,6 +485,7 @@ FINISHING_TIPS_func() {
     echo "  so these changes can take effect."
     # Terminal profile tips
     if [[ "$RELEASE_OS" == 'darwin' ]]; then
+        echo "- A double-clickable file, ceremonyclient_view_logs.command, has been placed on your desktop to make it easier to view logs."
         echo "- For better readability in your terminal profile, copy the following to your ~/.zshrc file:"
         echo "  # Terminal display preferences"
         echo "  autoload -Uz vcs_info"
@@ -595,6 +610,10 @@ INSTALL_DEPENDANCIES_ALTER_TERMINAL_PROFILES_func
 
 DOWNLOAD_INSTALL_BINARIES_func
 ALTER_RELOAD_RESTART_DAEMONS_func
+
+if [[$RELEASE_OS == "darwin" ]]; then
+    VIEW_LOGS_SCRIPT_ON_DESKTOP_func
+fi
 
 FINISHING_TIPS_func
 
