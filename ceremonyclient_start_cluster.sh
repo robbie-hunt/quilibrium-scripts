@@ -127,12 +127,12 @@ CHECK_TAILSCALE_func() {
     # If Tailscale status check fails on a slave node, try again every minute for 10 mins
     for i in {1..10}; do
         if [[ $TAILSCALE_STATUS_RESULT == "Tailscale is stopped." ]]; then
+            TAILSCALE_NOT_RUNNING=1
             echo "ceremonyclient_start_cluster.sh warning: Tailscale is not running (attempt $i/10). Retrying check in 60 seconds..."
             sleep 60
-            TAILSCALE_NOT_RUNNING=1
         else
-            break  # success, exit the loop
             TAILSCALE_NOT_RUNNING=0
+            break  # success, exit the loop
         fi
     done
     if [[ $TAILSCALE_NOT_RUNNING == 1 ]]; then
@@ -145,12 +145,12 @@ CHECK_TAILSCALE_func() {
     else
         for i in {1..10}; do
             if CHECK_TAILSCALE_PING_CONNECTIONS_func; then
-                break  # success, exit the loop
                 TAILSCALE_NOT_CONNECTING=0
+                break  # success, exit the loop
             else
+                TAILSCALE_NOT_CONNECTING=1
                 echo "ceremonyclient_start_cluster.sh warning: Tailscale connection check to master node failed (attempt $i/10). Retrying in 60 seconds..."
                 sleep 60
-                TAILSCALE_NOT_CONNECTING=1
             fi
         done
         if [[ $TAILSCALE_NOT_CONNECTING == 1 ]]; then
