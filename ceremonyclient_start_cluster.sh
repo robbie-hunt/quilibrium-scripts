@@ -126,6 +126,11 @@ CHECK_TAILSCALE_func() {
 
     # If Tailscale status check fails on a slave node, try again every minute for 10 mins
     for i in {1..10}; do
+        if [[ $TAILSCALE_PATH_NEEDS_TO_BE_HARDCODED == 1 ]]; then
+            TAILSCALE_STATUS_RESULT=$(/usr/local/bin/tailscale status)
+        else
+            TAILSCALE_STATUS_RESULT=$(tailscale status)
+        fi
         if [[ $TAILSCALE_STATUS_RESULT == "Tailscale is stopped." ]]; then
             TAILSCALE_NOT_RUNNING=1
             echo "ceremonyclient_start_cluster.sh warning: Tailscale is not running (attempt $i/10). Retrying check in 60 seconds..."
