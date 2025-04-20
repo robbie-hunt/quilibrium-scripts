@@ -78,6 +78,34 @@ GATHER_WORKER_IPS_func() {
     | awk '{ if ($0 ~ /\/ip4\//) { n = split($0, arr, "/"); ip = arr[3]; comment = substr($0, index($0, "#") + 2); if (!(ip in seen)) { seen[ip] = comment } } } END { for (ip in seen) { print ip " - " seen[ip] } }'
 }
 
+CHECK_TAILSCALE_PING_CONNECTIONS_func() {
+    IP_ADDRESSES_TOTAL=$(GATHER_WORKER_IPS_func)
+    if [[ $MASTER_NODE == 1 ]]; then
+        IP_ADDRESSES_TO_PING=$(echo "$IP_ADDRESSES_TOTAL" | grep -v " - Master.*")
+    else
+        IP_ADDRESSES_TO_PING=$(echo "$IP_ADDRESSES_TOTAL" | grep " - Master.*")
+    fi
+    while IFS= read -r IP_ADDRESS_TO_PING; do
+        IP_ADDRESS=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $1}')
+        MACHINE_INFO=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $2}')
+        if [[ $TAILSCALE_PATH_NEEDS_TO_BE_HARDCODED == 1 ]]; then
+            TAILSCALE_PING_RESULT=$(/usr/local/bin/tailscale ping -c 3 $IP_ADDRESS 2>/dev/null)
+        else
+            TAILSCALE_PING_RESULT=$(tailscale ping -c 3 $IP_ADDRESS 2>/dev/null)
+        fi
+        if [[ $TAILSCALE_PING_RESULT == "pong"* ]]; then
+            echo "ceremonyclient_start_cluster.sh info: Tailscale successfully pinged node $IP_ADDRESS ($MACHINE_INFO)."
+        else
+            if [[ $MASTER_NODE == 1 ]]; then
+                echo "ceremonyclient_start_cluster.sh warning: Tailscale could not connect to slave node $IP_ADDRESS ($MACHINE_INFO). Continuing anyway..."
+            else
+                echo "ceremonyclient_start_cluster.sh error: Tailscale could not connect to master node $IP_ADDRESS ($MACHINE_INFO)."
+                return 1
+            fi
+        fi
+    done <<< "$IP_ADDRESSES_TO_PING"
+}
+
 CHECK_TAILSCALE_func() {
     if tailscale version &>/dev/null; then
         :
@@ -90,41 +118,45 @@ CHECK_TAILSCALE_func() {
             echo "                                       or run 'which tailscale' and hardcode the correct tailscale path into this script."
         fi
     fi
-
     if [[ $TAILSCALE_PATH_NEEDS_TO_BE_HARDCODED == 1 ]]; then
         TAILSCALE_STATUS_RESULT=$(/usr/local/bin/tailscale status)
     else
         TAILSCALE_STATUS_RESULT=$(tailscale status)
     fi
-    if [[ $TAILSCALE_STATUS_RESULT == "Tailscale is stopped." ]]; then
-        echo "ceremonyclient_start_cluster.sh error: Tailscale is not running. Please connect Tailscale."
-        exit 1
-    else
-        IP_ADDRESSES_TOTAL=$(GATHER_WORKER_IPS_func)
-        if [[ $MASTER_NODE == 1 ]]; then
-            IP_ADDRESSES_TO_PING=$(echo "$IP_ADDRESSES_TOTAL" | grep -v " - Master.*")
+
+    # If Tailscale status check fails on a slave node, try again every minute for 10 mins
+    for i in {1..10}; do
+        if [[ $TAILSCALE_STATUS_RESULT == "Tailscale is stopped." ]]; then
+            echo "ceremonyclient_start_cluster.sh warning: Tailscale is not running (attempt $i/10). Retrying check in 60 seconds..."
+            sleep 60
+            TAILSCALE_NOT_RUNNING=1
         else
-            IP_ADDRESSES_TO_PING=$(echo "$IP_ADDRESSES_TOTAL" | grep " - Master.*")
+            break  # success, exit the loop
+            TAILSCALE_NOT_RUNNING=0
         fi
-        while IFS= read -r IP_ADDRESS_TO_PING; do
-            IP_ADDRESS=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $1}')
-            MACHINE_INFO=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $2}')
-            if [[ $TAILSCALE_PATH_NEEDS_TO_BE_HARDCODED == 1 ]]; then
-                TAILSCALE_PING_RESULT=$(/usr/local/bin/tailscale ping -c 3 $IP_ADDRESS 2>/dev/null)
+    done
+    if [[ $TAILSCALE_NOT_RUNNING == 1 ]]; then
+        echo "ceremonyclient_start_cluster.sh error: Tailscale status check failed after 10 attempts. Exiting..."
+        exit 1
+    fi
+    # If Tailscale ping check fails on a slave node, try again every minute for 10 mins
+    if [[ $MASTER_NODE == 1 ]]; then
+        CHECK_TAILSCALE_PING_CONNECTIONS_func
+    else
+        for i in {1..10}; do
+            if CHECK_TAILSCALE_PING_CONNECTIONS_func; then
+                break  # success, exit the loop
+                TAILSCALE_NOT_CONNECTING=0
             else
-                TAILSCALE_PING_RESULT=$(tailscale ping -c 3 $IP_ADDRESS 2>/dev/null)
+                echo "ceremonyclient_start_cluster.sh warning: Tailscale connection check to master node failed (attempt $i/10). Retrying in 60 seconds..."
+                sleep 60
+                TAILSCALE_NOT_CONNECTING=1
             fi
-            if [[ $TAILSCALE_PING_RESULT == "pong"* ]]; then
-                echo "ceremonyclient_start_cluster.sh info: Tailscale successfully pinged node $IP_ADDRESS ($MACHINE_INFO)."
-            else
-                if [[ $MASTER_NODE == 1 ]]; then
-                    echo "ceremonyclient_start_cluster.sh warning: Tailscale could not connect to slave node $IP_ADDRESS ($MACHINE_INFO). Continuing anyway..."
-                else
-                    echo "ceremonyclient_start_cluster.sh error: Tailscale could not connect to master node $IP_ADDRESS ($MACHINE_INFO)."
-                    return 1
-                fi
-            fi
-        done <<< "$IP_ADDRESSES_TO_PING"
+        done
+        if [[ $TAILSCALE_NOT_CONNECTING == 1 ]]; then
+            echo "ceremonyclient_start_cluster.sh error: Tailscale connection check to master node failed after 10 attempts. Exiting..."
+            exit 1
+        fi
     fi
 }
 
@@ -230,29 +262,8 @@ done
 DETERMINE_GOMAXPROCES_func
 VALIDATE_START_CORE_INDEX_func
 VALIDATE_DATA_WORKER_COUNT_func
-
 CHECK_IF_IS_MASTER_NODE_func
-if [[ $TAILSCALE == 1 ]]; then
-    if [[ $MASTER_NODE == 1 ]]; then
-        CHECK_TAILSCALE_func
-    else
-        # If Tailscale check fails on a slave node, try again every minute for 10 mins
-        for i in {1..10}; do
-            if CHECK_TAILSCALE_func; then
-                break  # success, exit the loop
-                TAILSCALE_NOT_CONNECTING=0
-            else
-                echo "ceremonyclient_start_cluster.sh warning: Tailscale connection check to master node failed (attempt $i/10). Retrying in 60 seconds..."
-                sleep 5
-                TAILSCALE_NOT_CONNECTING=1
-            fi
-        done
-        if [[ $TAILSCALE_NOT_CONNECTING == 1 ]]; then
-            echo "ceremonyclient_start_cluster.sh error: Tailscale connection check to master node failed after 10 attempts. Exiting..."
-            exit 1
-        fi
-    fi
-fi
+CHECK_TAILSCALE_func
 
 MASTER_PID=0
 
