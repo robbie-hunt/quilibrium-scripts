@@ -58,7 +58,7 @@ echo $TIMESTAMP > "$RSYNC_LOGFILE"
 printf "\n" >> "$RSYNC_LOGFILE"
 
 # rsync - copy over config files, excluding store folder
-if rsync -avhpR -n --exclude "store" "$CEREMONYCLIENT_CONFIG_DIR" "$BACKUP_DIR"; then
+if rsync -avhpR -n --exclude "store" "$CEREMONYCLIENT_CONFIG_DIR" "$BACKUP_DIR" &>/dev/null; then
     rsync -avhpR --exclude "store" "$CEREMONYCLIENT_CONFIG_DIR" "$BACKUP_DIR" >> "$RSYNC_LOGFILE"
 else
     echo "ceremonyclient_backup.sh error [$(date)]: rsync command 'rsync -avhpR -n --exclude store $CEREMONYCLIENT_CONFIG_DIR $BACKUP_DIR' failed. Exiting..."
@@ -69,7 +69,7 @@ fi
 zip -rX "$BACKUP_ZIP" "$BACKUP_DIR"
 
 # rclone - copy zipped backup dir to Dropbox
-if rclone -n copy "$BACKUP_ZIP".zip "$RCLONE_PARENT_DIR"; then
+if rclone -n copy "$BACKUP_ZIP".zip "$RCLONE_PARENT_DIR" &>/dev/null; then
     rclone copy "$BACKUP_ZIP".zip "$RCLONE_PARENT_DIR"
 else
     echo "ceremonyclient_backup.sh error [$(date)]: rclone command 'rclone -n copy "$BACKUP_ZIP" "$RCLONE_PARENT_DIR"' failed. Exiting..."
