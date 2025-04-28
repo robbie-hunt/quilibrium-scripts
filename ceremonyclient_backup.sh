@@ -69,8 +69,8 @@ fi
 zip "$BACKUP_ZIP" "$BACKUP_DIR"
 
 # rclone - copy zipped backup dir to Dropbox
-if rclone -n copy "$BACKUP_ZIP" "$RCLONE_PARENT_DIR"; then
-    rclone copy "$BACKUP_ZIP" "$RCLONE_PARENT_DIR"
+if rclone -n copy "$BACKUP_ZIP".zip "$RCLONE_PARENT_DIR"; then
+    rclone copy "$BACKUP_ZIP".zip "$RCLONE_PARENT_DIR"
 else
     echo "ceremonyclient_backup.sh error [$(date)]: rclone command 'rclone -n copy "$BACKUP_ZIP" "$RCLONE_PARENT_DIR"' failed. Exiting..."
     exit
