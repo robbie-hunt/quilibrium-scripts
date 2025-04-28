@@ -38,6 +38,8 @@ BACKUP_DIR=$(echo "$BACKUP_PARENT_DIR/ceremonyclient_backup")
 BACKUP_ZIP="$BACKUP_DIR"_"$PEER_ID"_"$HOSTNAME"
 RSYNC_LOGFILE="$BACKUP_DIR/rsync_$TIMESTAMP.log"
 
+REMOTE_NAME=""
+
 while getopts "xhr:" opt; do
     case "$opt" in
         x) set -x;;
