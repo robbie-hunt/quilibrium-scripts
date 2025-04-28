@@ -6,7 +6,7 @@ set -eou pipefail
 
 USAGE_func() {
     echo ""
-    echo "Backup tool for the Quilibrium node."
+    echo "Backup tool for backing up the Quilibrium node .config directory (minus the store) to a remote directory."
     echo ""
     echo "USAGE: bash ceremonyclient_backup.sh [-h] [-x]"
     echo ""
@@ -37,14 +37,23 @@ BACKUP_PARENT_DIR=$(dirname "$CEREMONYCLIENT_ROOT_DIR")
 BACKUP_DIR=$(echo "$BACKUP_PARENT_DIR/ceremonyclient_backup")
 BACKUP_ZIP="$BACKUP_DIR"_"$PEER_ID"_"$HOSTNAME"
 RSYNC_LOGFILE="$BACKUP_DIR/rsync_$TIMESTAMP.log"
-RCLONE_PARENT_DIR="rhquil2:Quilibrium/$PEER_ID/$HOSTNAME"
 
-# Check if backup dir exists
-    # If yes, continue
-    # If no, make it
-# Copy config files to folder via rsync, direct rsync log into file which has filename of rsync_timestamp.log
-# Zip folder
-# Rclone folder to rhquil2, direct log to rclone_timestamp.log
+while getopts "xhr:" opt; do
+    case "$opt" in
+        x) set -x;;
+        h) USAGE_func; exit 0;;
+        r) REMOTE_NAME="$OPTARG";;
+        *) USAGE_func; exit 0;;
+    esac
+done
+
+if rclone ls "$REMOTE_NAME:" > /dev/null 2>&1; then
+    REMOTE_DESTINATION="$REMOTE_NAME:Quilibrium"
+else
+    echo "ceremonyclient_backup.sh error [$(date)]: rclone couldn't connect to '$REMOTE_NAME'. Please debug this yourself. Exiting..."
+    exit 1
+fi
+RCLONE_PARENT_DIR="$REMOTE_DESTINATION/$PEER_ID/$HOSTNAME"
 
 # Create backup dir if it doesn't exist
 if [[ -d "$BACKUP_DIR" ]]; then
@@ -65,7 +74,7 @@ if rsync -avhpR -n --exclude "store" "$CEREMONYCLIENT_CONFIG_DIR" "$BACKUP_DIR" 
     rsync -avhpR --exclude "store" "$CEREMONYCLIENT_CONFIG_DIR" "$BACKUP_DIR" >> "$RSYNC_LOGFILE"
 else
     echo "ceremonyclient_backup.sh error [$(date)]: rsync command 'rsync -avhpR -n --exclude store $CEREMONYCLIENT_CONFIG_DIR $BACKUP_DIR' failed. Exiting..."
-    exit
+    exit 1
 fi
 
 # Zip backup dir
@@ -76,7 +85,7 @@ if rclone -n copy "$BACKUP_ZIP".zip "$RCLONE_PARENT_DIR" &>/dev/null; then
     rclone copy "$BACKUP_ZIP".zip "$RCLONE_PARENT_DIR"
 else
     echo "ceremonyclient_backup.sh error [$(date)]: rclone command 'rclone -n copy "$BACKUP_ZIP" "$RCLONE_PARENT_DIR"' failed. Exiting..."
-    exit
+    exit 1
 fi
 
 exit
