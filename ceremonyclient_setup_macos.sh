@@ -405,8 +405,10 @@ EOF
 CONFIG_CHANGES_func() {
     # Set maxFrames (frame truncation) to 1001 frames, to save on disk space
     sudo sed -i'.sed-bak' -E 's|maxFrames: .*|maxFrames: 1001|' "$CEREMONYCLIENT_CONFIG_FILE"
+    # Set store path explicitly
+    sudo sed -i'.sed-bak' -E 's|path: .*|path: $CEREMONYCLIENT_CONFIG_DIR/store|' "$CEREMONYCLIENT_CONFIG_FILE"
     # Set logfile
-    sudo sed -i'.sed-bak' -E "s|logFile: .*|logFile: \"$CEREMONYCLIENT_LOGFILE\"|" "$CEREMONYCLIENT_CONFIG_FILE"
+    #sudo sed -i'.sed-bak' -E "s|logFile: .*|logFile: \"$CEREMONYCLIENT_LOGFILE\"|" "$CEREMONYCLIENT_CONFIG_FILE"
     # Enable gRPC
     bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -g
     bash $SCRIPT_DIR/ceremonyclient_grpc.sh -q -l
@@ -481,8 +483,12 @@ FINISHING_TIPS_func() {
     echo ""
     echo "Finishing tips:"
     echo "- gRPC has been setup, and the node config has been altered to make use of 'maxFrames: 1001',"
-    echo "  so as to limit the store size. Please let your node run, and when it starts printing, restart it"
-    echo "  so these changes can take effect."
+    echo "  so as to limit the store size. Please let your node run, and when it starts printing,"
+    echo "  restart it so these changes can take effect."
+    echo "- If in future you have a large store folder with maxFramces set to 1000, try starting the node with the"
+    echo "  option '--compact-db' and let it run until it quits."
+    echo "- When running the node, use the '--config' flag with the config directory. If you're using the"
+    echo "  ceremonyclient_start_cluster.sh script, this is already coded in."
     # Terminal profile tips
     if [[ "$RELEASE_OS" == 'darwin' ]]; then
         echo "- A double-clickable file, ceremonyclient_view_logs.command, has been placed on your desktop to make it easier to view logs."
@@ -581,8 +587,9 @@ fi
 CEREMONYCLIENT_LOGFILE="$HOME/ceremonyclient.log"
 CEREMONYCLIENT_LOGROTATE_LOGFILE="$HOME/ceremonyclient-logrotate.log"
 
-# Ceremonyclient config file location
+# Ceremonyclient config location
 CEREMONYCLIENT_CONFIG_FILE=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key "ceremonyclient_config")
+CEREMONYCLIENT_CONFIG_DIR=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key "ceremonyclient_config_dir")
 
 # Plist name and file
 PLIST_LABEL="local.ceremonyclient"
