@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set shell options
-set -eou pipefail
+set -eo pipefail
 #set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
 
 USAGE_func() {
@@ -25,19 +25,6 @@ USAGE_func() {
     echo ""
     exit 0
 }
-
-# Figure out what directory I'm in
-SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
-  SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
-  SOURCE="$(readlink "$SOURCE")"
-  [[ $SOURCE != /* ]] && SOURCE="$SCRIPT_DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
-done
-SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
-SCRIPT_PARENT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print}' | sed 's/\/*$//')
-
-# .localenv file location
-LOCALENV="$SCRIPT_PARENT_DIR/.localenv"
 
 # Function to print CPU architecture
 PRINT_ARCH_func() {
@@ -70,9 +57,6 @@ PRINT_OS_func() {
     fi
     return 0
 }
-
-RELEASE_OS=$(PRINT_OS_func)
-RELEASE_ARCH=$(PRINT_ARCH_func)
 
 # Function to combine the OS and arch into a string, to help with filtering binaries
 # For example: 'linux-amd64', 'darwin-arm64'
@@ -256,7 +240,21 @@ LATEST_VERSIONS_func() {
     return 0
 }
 
+# Figure out what directory I'm in
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$SCRIPT_DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+SCRIPT_PARENT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print}' | sed 's/\/*$//')
 
+# .localenv file location
+LOCALENV="$SCRIPT_PARENT_DIR/.localenv"
+
+RELEASE_OS=$(PRINT_OS_func)
+RELEASE_ARCH=$(PRINT_ARCH_func)
 
 while :; do
     case "$1" in

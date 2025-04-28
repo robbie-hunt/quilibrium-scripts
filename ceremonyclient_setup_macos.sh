@@ -510,7 +510,9 @@ FINISHING_TIPS_func() {
         echo "- Make sure to configure the 'dataWorkersMultiaddrs' section of 'engine' in $CEREMONYCLIENT_CONFIG,"
         echo "  and that this section is the same ON ALL MACHINES in order for this node to function as part of the cluster."
     fi
-    echo "- To set up backups, "
+    echo "- To set up backups, rclone must first be set up, then the backup script can be put into a weekly cron job."
+    echo "  Run 'rclone config' to add a new remote destination, and enter your remote details."
+    echo "  Then you can run the backup script in tools directory, tools/ceremonyclient_backup.sh, and set it to run weekly via cron."
     echo ""
 
     return
