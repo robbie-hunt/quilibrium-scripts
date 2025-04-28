@@ -66,7 +66,7 @@ else
 fi
 
 # Zip backup dir
-zip "$BACKUP_ZIP" "$BACKUP_DIR"
+zip -rX "$BACKUP_ZIP" "$BACKUP_DIR"
 
 # rclone - copy zipped backup dir to Dropbox
 if rclone -n copy "$BACKUP_ZIP".zip "$RCLONE_PARENT_DIR"; then
