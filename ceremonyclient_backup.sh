@@ -48,6 +48,8 @@ while getopts "xhr:" opt; do
         *) USAGE_func; exit 0;;
     esac
 done
+
+# Make sure the remote destination supplied is correct
 if [[ "$REMOTE_NAME" == "" ]]; then
     echo "ceremonyclient_backup.sh error [$(date)]: Please supply a remote destination using -r."
     exit 1
@@ -83,7 +85,7 @@ else
 fi
 
 # Zip backup dir
-zip -rX "$BACKUP_ZIP".zip "$BACKUP_DIR"
+zip -rFSX "$BACKUP_ZIP".zip "$BACKUP_DIR"
 
 # rclone - copy zipped backup dir to Dropbox
 if rclone -n copy "$BACKUP_ZIP".zip "$RCLONE_PARENT_DIR" &>/dev/null; then
