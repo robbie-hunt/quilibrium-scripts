@@ -35,6 +35,7 @@ CEREMONYCLIENT_ROOT_DIR=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key "cer
 CEREMONYCLIENT_CONFIG_DIR=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key "ceremonyclient_config_dir")
 BACKUP_PARENT_DIR=$(dirname "$CEREMONYCLIENT_ROOT_DIR")
 BACKUP_DIR=$(echo "$BACKUP_PARENT_DIR/ceremonyclient_backup")
+BACKUP_ZIP="$BACKUP_DIR"_"$PEER_ID"_"$HOSTNAME"
 RSYNC_LOGFILE="$BACKUP_DIR/rsync_$TIMESTAMP.log"
 RCLONE_PARENT_DIR="rhquil2:Quilibrium/$PEER_ID/$HOSTNAME"
 
@@ -65,13 +66,13 @@ else
 fi
 
 # Zip backup dir
-zip -X $BACKUP_DIR $BACKUP_DIR
+zip "$BACKUP_ZIP" "$BACKUP_DIR"
 
 # rclone - copy zipped backup dir to Dropbox
-if rclone -n copy "$BACKUP_DIR".zip "$RCLONE_PARENT_DIR" &>/dev/null; then
-    rclone copy "$BACKUP_DIR".zip "$RCLONE_PARENT_DIR"
+if rclone -n copy "$BACKUP_ZIP" "$RCLONE_PARENT_DIR" &>/dev/null; then
+    rclone copy "$BACKUP_ZIP" "$RCLONE_PARENT_DIR"
 else
-    echo "ceremonyclient_backup.sh error [$(date)]: rclone command 'rclone -n copy "$BACKUP_DIR".zip "$RCLONE_PARENT_DIR"' failed. Exiting..."
+    echo "ceremonyclient_backup.sh error [$(date)]: rclone command 'rclone -n copy "$BACKUP_ZIP" "$RCLONE_PARENT_DIR"' failed. Exiting..."
     exit
 fi
 
