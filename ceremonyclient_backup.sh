@@ -64,10 +64,10 @@ else
     exit
 fi
 
-exit
-
 # Zip backup dir
 zip -X $BACKUP_DIR $BACKUP_DIR
+
+exit
 
 # rclone - copy zipped backup dir to Dropbox
 if rclone -n copy "$BACKUP_DIR".zip "$RCLONE_PARENT_DIR" &>/dev/null; then
