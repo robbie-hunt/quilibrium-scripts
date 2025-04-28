@@ -77,16 +77,3 @@ else
 fi
 
 exit
-
-
-
-
-echo $TIMESTAMP > /root/ceremonyclient_backup/updates-rsync.txt
-printf "\n" >> /root/ceremonyclient_backup/updates-rsync.txt
-
-rsync -avhp /root/ceremonyclient/node/.config /root/ceremonyclient_backup/node/.config >> /root/ceremonyclient_backup/updates-rsync.txt
-tar -czf /root/ceremonyclient_backup.tar.gz /root/ceremonyclient_backup
-
-rclone copy /root/ceremonyclient_backup.tar.gz rhquil2:$USER/node1
-
-exit
