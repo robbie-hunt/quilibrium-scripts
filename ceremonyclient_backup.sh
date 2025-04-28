@@ -54,6 +54,7 @@ else
 fi
 
 # Reset rsync logfile
+rm -r $BACKUP_DIR/rsync_*
 echo $TIMESTAMP > "$RSYNC_LOGFILE"
 printf "\n" >> "$RSYNC_LOGFILE"
 
