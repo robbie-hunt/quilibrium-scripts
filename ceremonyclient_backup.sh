@@ -64,6 +64,8 @@ else
     exit
 fi
 
+exit
+
 # Zip backup dir
 zip -X $BACKUP_DIR $BACKUP_DIR
 
