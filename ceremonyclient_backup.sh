@@ -46,7 +46,10 @@ while getopts "xhr:" opt; do
         *) USAGE_func; exit 0;;
     esac
 done
-
+if [[ "$REMOTE_NAME" == "" ]]; then
+    echo "ceremonyclient_backup.sh error [$(date)]: Please supply a remote destination using -r."
+    exit 1
+fi
 if rclone ls "$REMOTE_NAME:" > /dev/null 2>&1; then
     REMOTE_DESTINATION="$REMOTE_NAME:Quilibrium"
 else
