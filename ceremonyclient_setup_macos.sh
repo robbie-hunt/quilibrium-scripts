@@ -406,7 +406,7 @@ CONFIG_CHANGES_func() {
     # Set maxFrames (frame truncation) to 1001 frames, to save on disk space
     sudo sed -i'.sed-bak' -E 's|maxFrames: .*|maxFrames: 1001|' "$CEREMONYCLIENT_CONFIG_FILE"
     # Set store path explicitly
-    sudo sed -i'.sed-bak' -E 's|path: .*|path: $CEREMONYCLIENT_CONFIG_DIR/store|' "$CEREMONYCLIENT_CONFIG_FILE"
+    #sudo sed -i'.sed-bak' -E 's|path: .*|path: $CEREMONYCLIENT_CONFIG_DIR/store|' "$CEREMONYCLIENT_CONFIG_FILE"
     # Set logfile
     #sudo sed -i'.sed-bak' -E "s|logFile: .*|logFile: \"$CEREMONYCLIENT_LOGFILE\"|" "$CEREMONYCLIENT_CONFIG_FILE"
     # Enable gRPC
@@ -485,6 +485,8 @@ FINISHING_TIPS_func() {
     echo "- gRPC has been setup, and the node config has been altered to make use of 'maxFrames: 1001',"
     echo "  so as to limit the store size. Please let your node run, and when it starts printing,"
     echo "  restart it so these changes can take effect."
+    echo "- Check your config to make sure there are no duplicates of anything, that maxFrames is set to 1001,"
+    echo "  and that the path: in the db: section to the path of the store."
     echo "- If in future you have a large store folder with maxFramces set to 1000, try starting the node with the"
     echo "  option '--compact-db' and let it run until it quits."
     echo "- When running the node, use the '--config' flag with the config directory. If you're using the"

@@ -8,7 +8,7 @@ USAGE_func() {
     echo ""
     echo "Backup tool for backing up the Quilibrium node .config directory (minus the store) to a remote directory."
     echo ""
-    echo "USAGE: bash ceremonyclient_backup.sh [-h] [-x]"
+    echo "USAGE: bash ceremonyclient_backup.sh [-h] [-x] [-r remote destination]"
     echo ""
     echo "       -h    Display this help dialogue."
     echo "       -x    For debugging the script; sets the x shell builtin, 'set -x'."
