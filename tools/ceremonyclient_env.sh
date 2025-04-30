@@ -269,6 +269,7 @@ while :; do
         -latest-version) LATEST_VERSIONS_func "${2:-}";;
         *) USAGE_func;;
     esac
+    exit
 done
 
 exit
