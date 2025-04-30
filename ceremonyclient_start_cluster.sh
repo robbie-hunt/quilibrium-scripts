@@ -236,6 +236,8 @@ NODE_CONFIG_DIR=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonycli
 NODE_CONFIG_FILE=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_config')
 NODE_BINARY_NAME=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet' | awk -F'/' '{print $NF}')
 NODE_BINARY="$NODE_BINARY_NAME --config $NODE_CONFIG_DIR"
+echo "NODE CONFIG DIR: $NODE_CONFIG_DIR"
+echo "NODE BINARY: $NODE_BINARY"
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
