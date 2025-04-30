@@ -187,6 +187,7 @@ START_WORKERS_func() {
     for ((i=0; i<DATA_WORKER_COUNT; i++)); do
         CORE=$((START_CORE_INDEX + i))
         echo "ceremonyclient_start_cluster.sh info [$(date)]: Starting core $CORE."
+        echo "$QUIL_NODE_PATH/$NODE_BINARY --core $CORE --parent-process $PARENT_PID"
         $QUIL_NODE_PATH/$NODE_BINARY --core $CORE --parent-process $PARENT_PID &
     done
 }
