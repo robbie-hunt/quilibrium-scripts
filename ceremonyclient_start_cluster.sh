@@ -110,6 +110,8 @@ CHECK_TAILSCALE_PING_CONNECTIONS_func() {
 }
 
 CHECK_TAILSCALE_func() {
+    echo "ceremonyclient_start_cluster.sh info [$(date)]: Checking Tailscale..."
+
     # This whole section of checking if Tailscale needs to be hardcoded is because launchctl
     # might be running the node on macOS, and for some reason it doesn't recognise some commands,
     # and needs them hardcoded in
