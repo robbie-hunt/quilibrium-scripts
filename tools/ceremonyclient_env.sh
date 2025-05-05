@@ -119,6 +119,8 @@ LATEST_INSTALLED_VERSIONS_func() {
     echo "echpo 2"
 #    echo "PRINT_LOCAL_ENV_KEY_VALUE_func: $(PRINT_LOCAL_ENV_KEY_VALUE_func 'ceremonyclient_root_dir')"
 
+    echo "TYPE: $TYPE"
+    echo "RELEASE_LINE: $RELEASE_LINE"
     # List all relevant files
     find $(PRINT_LOCAL_ENV_KEY_VALUE_func "ceremonyclient_root_dir") -type f -name "$TYPE-*-$RELEASE_LINE" | \
     # Extract the version numbers using grep and awk
