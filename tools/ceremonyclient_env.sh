@@ -66,8 +66,6 @@ PRINT_RELEASE_LINE_func() {
     return 0
 }
 
-RELEASE_LINE=$(PRINT_RELEASE_LINE_func)
-
 PRINT_LOCAL_ENV_KEY_VALUE_func() {
     # Check if the .localenv file exists
     if [[ -f "$LOCALENV" ]]; then
@@ -261,6 +259,7 @@ LOCALENV="$SCRIPT_PARENT_DIR/.localenv"
 
 RELEASE_OS=$(PRINT_OS_func)
 RELEASE_ARCH=$(PRINT_ARCH_func)
+RELEASE_LINE=$(PRINT_RELEASE_LINE_func)
 
 while :; do
     case "$1" in
