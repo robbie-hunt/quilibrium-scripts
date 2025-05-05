@@ -199,6 +199,7 @@ IS_MASTER_PROCESS_RUNNING_func() {
     return $?
 }
 
+echo ""
 echo "ceremonyclient_start_cluster.sh info [$(date)]: Starting script..."
 
 # Figure out what directory I'm in
