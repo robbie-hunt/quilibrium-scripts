@@ -199,6 +199,8 @@ IS_MASTER_PROCESS_RUNNING_func() {
     return $?
 }
 
+echo "ceremonyclient_start_cluster.sh info [$(date)]: Starting script..."
+
 # Figure out what directory I'm in
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -239,11 +241,6 @@ NODE_CONFIG_DIR=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonycli
 NODE_CONFIG_FILE=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_config')
 NODE_BINARY_NAME=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet' | awk -F'/' '{print $NF}')
 NODE_BINARY="$NODE_BINARY_NAME --config $NODE_CONFIG_DIR"
-bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet'
-echo ""
-echo "NODE BINARY NAME: $NODE_BINARY_NAME"
-echo "NODE CONFIG DIR: $NODE_CONFIG_DIR"
-echo "NODE BINARY: $NODE_BINARY"
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
