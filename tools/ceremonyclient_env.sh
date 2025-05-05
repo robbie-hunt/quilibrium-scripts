@@ -71,6 +71,7 @@ RELEASE_LINE=$(PRINT_RELEASE_LINE_func)
 PRINT_LOCAL_ENV_KEY_VALUE_func() {
     # Check if the .localenv file exists
     if [[ -f "$LOCALENV" ]]; then
+        echo "LOCALENV EXISTS"
         :
     else
         echo "Error: $LOCALENV does not exist."
@@ -79,6 +80,7 @@ PRINT_LOCAL_ENV_KEY_VALUE_func() {
 
     # Use grep to find the line and awk to extract the value
     local VALUE=$(grep "^$1=" $LOCALENV | awk -F'=' '{print $2}')
+    echo "VALUE: $VALUE"
 
     # Check if the key exists in the file
     if [[ -z "$VALUE" && $(grep -c "^$1=" $LOCALENV) -eq 0 ]]; then
@@ -115,6 +117,8 @@ EOF
 # Find the latest version of either the qclient or node binary that is installed
 LATEST_INSTALLED_VERSIONS_func() {
     local TYPE=$1
+
+    echo "PRINT_LOCAL_ENV_KEY_VALUE_func: $(PRINT_LOCAL_ENV_KEY_VALUE_func 'ceremonyclient_root_dir')"
 
     # List all relevant files
     find $(PRINT_LOCAL_ENV_KEY_VALUE_func "ceremonyclient_root_dir") -type f -name "$TYPE-*-$RELEASE_LINE" | \
