@@ -116,6 +116,7 @@ EOF
 LATEST_INSTALLED_VERSIONS_func() {
     local TYPE=$1
 
+    echo "echpo 2"
 #    echo "PRINT_LOCAL_ENV_KEY_VALUE_func: $(PRINT_LOCAL_ENV_KEY_VALUE_func 'ceremonyclient_root_dir')"
 
     # List all relevant files
