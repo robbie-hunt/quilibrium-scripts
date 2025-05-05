@@ -18,14 +18,17 @@ USAGE_func() {
     echo ""
     echo "Runs the Quilibrium cluster."
     echo ""
-    echo "USAGE: bash ceremonyclient_start_cluster.sh [-h] [-x] [-q] [--core-index-start] [--data-worker-count]"
+    echo "USAGE: bash ceremonyclient_start_cluster.sh [-h] [-x] [-q] [--check-tailscale] [--check-tailscale-continue-anyway] [--core-index-start] [--data-worker-count]"
     echo ""
-    echo "       -h                     Display this help dialogue."
-    echo "       -x                     For debugging the script; sets the x shell builtin, 'set -x'."
-    echo "       -q                     Quiet mode."
-    echo "       --check-tailscale      Script will make sure tailscale is connected before starting node processes."
-    echo "       --core-index-start     Cluster core index start."
-    echo "       --data-worker-count    Cluster data worker count."
+    echo "       -h                                   Display this help dialogue."
+    echo "       -x                                   For debugging the script; sets the x shell builtin, 'set -x'."
+    echo "       -q                                   Quiet mode."
+    echo "       --check-tailscale                    Script will make sure tailscale is connected before starting node processes,"
+    echo "                                            and will exit if it cannot connect to other nodes."
+    echo "       --check-tailscale-continue-anyway    Script will make sure tailscale is connected before starting node processes,"
+    echo "                                            but will continue if it cannot connect to other nodes."
+    echo "       --core-index-start                   Cluster core index start."
+    echo "       --data-worker-count                  Cluster data worker count."
     echo ""
     exit 0
 }
@@ -96,10 +99,10 @@ CHECK_TAILSCALE_PING_CONNECTIONS_func() {
         if [[ $TAILSCALE_PING_RESULT == "pong"* ]]; then
             echo "ceremonyclient_start_cluster.sh info [$(date)]: Tailscale successfully pinged node $IP_ADDRESS ($MACHINE_INFO)."
         else
-            if [[ $MASTER_NODE == 1 ]]; then
-                echo "ceremonyclient_start_cluster.sh warning [$(date)]: Tailscale could not connect to slave node $IP_ADDRESS ($MACHINE_INFO). Continuing anyway..."
+            if [[ $CONTINUE_IF_TAILSCALE_PING_FAILS == 1 ]]; then
+                echo "ceremonyclient_start_cluster.sh warning [$(date)]: Tailscale could not connect to node $IP_ADDRESS ($MACHINE_INFO). Continuing anyway..."
             else
-                echo "ceremonyclient_start_cluster.sh error [$(date)]: Tailscale could not connect to master node $IP_ADDRESS ($MACHINE_INFO)."
+                echo "ceremonyclient_start_cluster.sh error [$(date)]: Tailscale could not connect to node $IP_ADDRESS ($MACHINE_INFO)."
                 return 1
             fi
         fi
@@ -231,6 +234,7 @@ PARENT_PID=$$
 TAILSCALE=0
 TAILSCALE_NOT_CONNECTING=0
 TAILSCALE_PATH_NEEDS_TO_BE_HARDCODED=0
+CONTINUE_IF_TAILSCALE_PING_FAILS=0
 
 QUIET=0
 
@@ -268,6 +272,11 @@ while [[ $# -gt 0 ]]; do
             ;;
         --check-tailscale)
             TAILSCALE=1
+            shift 1
+            ;;
+        --check-tailscale-continue-anyway)
+            TAILSCALE=1
+            CONTINUE_IF_TAILSCALE_PING_FAILS=1
             shift 1
             ;;
         *)
