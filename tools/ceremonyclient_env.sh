@@ -2,7 +2,7 @@
 
 # Set shell options
 set -eo pipefail
-#set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
+set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
 
 USAGE_func() {
     echo ""
@@ -71,7 +71,6 @@ RELEASE_LINE=$(PRINT_RELEASE_LINE_func)
 PRINT_LOCAL_ENV_KEY_VALUE_func() {
     # Check if the .localenv file exists
     if [[ -f "$LOCALENV" ]]; then
-        echo "LOCALENV EXISTS"
         :
     else
         echo "Error: $LOCALENV does not exist."
@@ -80,7 +79,6 @@ PRINT_LOCAL_ENV_KEY_VALUE_func() {
 
     # Use grep to find the line and awk to extract the value
     local VALUE=$(grep "^$1=" $LOCALENV | awk -F'=' '{print $2}')
-    echo "VALUE: $VALUE"
 
     # Check if the key exists in the file
     if [[ -z "$VALUE" && $(grep -c "^$1=" $LOCALENV) -eq 0 ]]; then
