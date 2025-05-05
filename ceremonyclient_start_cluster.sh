@@ -89,9 +89,9 @@ CHECK_TAILSCALE_PING_CONNECTIONS_func() {
         IP_ADDRESS=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $1}')
         MACHINE_INFO=$(echo "$IP_ADDRESS_TO_PING" | awk -F' - ' '{print $2}')
         if [[ $TAILSCALE_PATH_NEEDS_TO_BE_HARDCODED == 1 ]]; then
-            TAILSCALE_PING_RESULT=$(/usr/local/bin/tailscale ping -c 3 $IP_ADDRESS 2>/dev/null)
+            TAILSCALE_PING_RESULT=$(/usr/local/bin/tailscale ping -c 1 $IP_ADDRESS 2>/dev/null)
         else
-            TAILSCALE_PING_RESULT=$(tailscale ping -c 3 $IP_ADDRESS 2>/dev/null)
+            TAILSCALE_PING_RESULT=$(tailscale ping -c 1 $IP_ADDRESS 2>/dev/null)
         fi
         if [[ $TAILSCALE_PING_RESULT == "pong"* ]]; then
             echo "ceremonyclient_start_cluster.sh info [$(date)]: Tailscale successfully pinged node $IP_ADDRESS ($MACHINE_INFO)."
@@ -117,8 +117,8 @@ CHECK_TAILSCALE_func() {
             TAILSCALE_PATH_NEEDS_TO_BE_HARDCODED=1
         else
             echo "ceremonyclient_start_cluster.sh error [$(date)]: Tailscale is not available in the CLI."
-            echo "                                       Either install the Tailscale CLI via the Tailscale Settings,"
-            echo "                                       or run 'which tailscale' and hardcode the correct tailscale path into this script."
+            echo "Either install the Tailscale CLI via the Tailscale Settings, or run"
+            echo "'which tailscale' and hardcode the correct tailscale path into this script."
         fi
     fi
     if [[ $TAILSCALE_PATH_NEEDS_TO_BE_HARDCODED == 1 ]]; then
@@ -127,8 +127,8 @@ CHECK_TAILSCALE_func() {
         TAILSCALE_STATUS_RESULT=$(tailscale status)
     fi
 
-    # If Tailscale status check fails on a slave node, try again every minute for 10 mins
-    for i in {1..10}; do
+    # If Tailscale status check fails on a slave node, try again every 30s for 10 mins
+    for i in {1..20}; do
         if [[ $TAILSCALE_PATH_NEEDS_TO_BE_HARDCODED == 1 ]]; then
             TAILSCALE_STATUS_RESULT=$(/usr/local/bin/tailscale status)
         else
@@ -136,8 +136,8 @@ CHECK_TAILSCALE_func() {
         fi
         if [[ $TAILSCALE_STATUS_RESULT == "Tailscale is stopped." ]]; then
             TAILSCALE_NOT_RUNNING=1
-            echo "ceremonyclient_start_cluster.sh warning [$(date)]: Tailscale is not running (attempt $i/10). Retrying check in 60 seconds..."
-            sleep 60
+            echo "ceremonyclient_start_cluster.sh warning [$(date)]: Tailscale is not running (attempt $i/10). Retrying check in 30 seconds..."
+            sleep 30
         else
             TAILSCALE_NOT_RUNNING=0
             break  # success, exit the loop
@@ -151,22 +151,22 @@ CHECK_TAILSCALE_func() {
     # Give a bit of time between Tailscale running and it connecting to other nodes
     sleep 30
 
-    # If Tailscale ping check fails on a slave node, try again every minute for 10 mins
+    # If Tailscale ping check fails on a slave node, try again every second for 10 mins
     if [[ $MASTER_NODE == 1 ]]; then
         CHECK_TAILSCALE_PING_CONNECTIONS_func
     else
-        for i in {1..10}; do
+        for i in {1..1800}; do
             if CHECK_TAILSCALE_PING_CONNECTIONS_func; then
                 TAILSCALE_NOT_CONNECTING=0
                 break  # success, exit the loop
             else
                 TAILSCALE_NOT_CONNECTING=1
-                echo "ceremonyclient_start_cluster.sh warning [$(date)]: Tailscale connection check to master node failed (attempt $i/10). Retrying in 60 seconds..."
-                sleep 60
+                echo "ceremonyclient_start_cluster.sh warning [$(date)]: Tailscale connection check to master node failed (attempt $i/10). Retrying in 1 second..."
+                sleep 1
             fi
         done
         if [[ $TAILSCALE_NOT_CONNECTING == 1 ]]; then
-            echo "ceremonyclient_start_cluster.sh error [$(date)]: Tailscale connection check to master node failed after 10 attempts. Exiting..."
+            echo "ceremonyclient_start_cluster.sh error [$(date)]: Tailscale connection check to master node failed after 1,800 attempts (every second for 30 minutes). Exiting..."
             exit 1
         fi
     fi
