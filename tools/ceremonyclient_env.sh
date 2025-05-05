@@ -202,6 +202,7 @@ LATEST_VERSIONS_func() {
             if [[ $QUIET = 1 ]]; then
                 LATEST_INSTALLED_VERSIONS_func "$TYPE"
             else
+                echo "echopopoppo"
                 echo "Latest $TYPE $FILES_TEXT ($SOURCE): $(LATEST_INSTALLED_VERSIONS_func "$TYPE")"
             fi
         fi
