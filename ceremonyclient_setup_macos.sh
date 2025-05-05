@@ -2,17 +2,18 @@
 
 # Set shell options
 set -eou pipefail
-set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
+#set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
 
 USAGE_func() {
     echo ""
     echo "Sets up a Quilibrium node on this machine."
     echo ""
-    echo "USAGE: bash ceremonyclient_setup.sh [-h] [-x] [-q] [-d directory] [-c] [-C core index start] [-D data worker count]"
+    echo "USAGE: bash ceremonyclient_setup.sh [-h] [-x] [-q] [-p] [-d directory] [-c] [-C core index start] [-D data worker count]"
     echo ""
     echo "       -h    Display this help dialogue."
     echo "       -x    For debugging the script; sets the x shell builtin, 'set -x'."
     echo "       -q    Quiet mode."
+    echo "       -p    Skip altering the terminal profile file."
     echo "       -d    Directory to install node to."
     echo "             By default, this will be gotten from the ceremonyclient_env.sh tool at the beginning of this script."
     echo "       -c    This node is being set up as part of a cluster."
