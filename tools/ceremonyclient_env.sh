@@ -2,7 +2,7 @@
 
 # Set shell options
 set -eo pipefail
-set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
+#set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
 
 USAGE_func() {
     echo ""
@@ -114,11 +114,6 @@ EOF
 LATEST_INSTALLED_VERSIONS_func() {
     local TYPE=$1
 
-    echo "echpo 2"
-#    echo "PRINT_LOCAL_ENV_KEY_VALUE_func: $(PRINT_LOCAL_ENV_KEY_VALUE_func 'ceremonyclient_root_dir')"
-
-    echo "TYPE: $TYPE"
-    echo "RELEASE_LINE: $RELEASE_LINE"
     # List all relevant files
     find $(PRINT_LOCAL_ENV_KEY_VALUE_func "ceremonyclient_root_dir") -type f -name "$TYPE-*-$RELEASE_LINE" | \
     # Extract the version numbers using grep and awk
@@ -203,7 +198,6 @@ LATEST_VERSIONS_func() {
             if [[ $QUIET = 1 ]]; then
                 LATEST_INSTALLED_VERSIONS_func "$TYPE"
             else
-                echo "echopopoppo"
                 echo "Latest $TYPE $FILES_TEXT ($SOURCE): $(LATEST_INSTALLED_VERSIONS_func "$TYPE")"
             fi
         fi
