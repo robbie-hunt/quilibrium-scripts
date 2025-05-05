@@ -238,8 +238,6 @@ CONTINUE_IF_TAILSCALE_PING_FAILS=0
 
 QUIET=0
 
-echo ""
-echo ""
 # Some variables for node paths and binaries
 QUIL_NODE_PATH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_node_dir')
 NODE_CONFIG_DIR=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_config_dir')
