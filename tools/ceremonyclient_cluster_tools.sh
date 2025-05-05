@@ -33,17 +33,17 @@ done
 SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 SCRIPT_PARENT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print}' | sed 's/\/*$//')
 
-RELEASE_ARCH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -arch)
-RELEASE_OS=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -os)
+RELEASE_ARCH=$(bash $SCRIPT_DIR/ceremonyclient_env.sh -arch)
+RELEASE_OS=$(bash $SCRIPT_DIR/ceremonyclient_env.sh -os)
 RELEASE_LINE="$RELEASE_OS-$RELEASE_ARCH"
 
 QUIET=0
 
 # Some variables for node paths and binaries
-QUIL_NODE_PATH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_node_dir')
-NODE_CONFIG_DIR=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_config_dir')
-NODE_CONFIG_FILE=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_config')
-NODE_BINARY_NAME=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet' | awk -F'/' '{print $NF}')
+QUIL_NODE_PATH=$(bash $SCRIPT_DIR/ceremonyclient_env.sh -key 'ceremonyclient_node_dir')
+NODE_CONFIG_DIR=$(bash $SCRIPT_DIR/ceremonyclient_env.sh -key 'ceremonyclient_config_dir')
+NODE_CONFIG_FILE=$(bash $SCRIPT_DIR/ceremonyclient_env.sh -key 'ceremonyclient_config')
+NODE_BINARY_NAME=$(bash $SCRIPT_DIR/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet' | awk -F'/' '{print $NF}')
 NODE_BINARY="$NODE_BINARY_NAME --config $NODE_CONFIG_DIR"
 
 while getopts "xhq" opt; do
