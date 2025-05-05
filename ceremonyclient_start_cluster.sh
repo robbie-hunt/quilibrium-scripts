@@ -126,11 +126,6 @@ CHECK_TAILSCALE_func() {
             echo "'which tailscale' and hardcode the correct tailscale path into this script."
         fi
     fi
-    if [[ $TAILSCALE_PATH_NEEDS_TO_BE_HARDCODED == 1 ]]; then
-        TAILSCALE_STATUS_RESULT=$(/usr/local/bin/tailscale status)
-    else
-        TAILSCALE_STATUS_RESULT=$(tailscale status)
-    fi
 
     # If Tailscale status check fails on a slave node, try again every 30s for 10 mins
     for i in {1..20}; do
