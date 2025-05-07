@@ -12,6 +12,7 @@ USAGE_func() {
     echo ""
     echo "       -h    Display this help dialogue."
     echo "       -x    For debugging the script; sets the x shell builtin, 'set -x'."
+    echo "       -r    Name of the rclone destination you want to send the backup to."
     echo ""
     exit 0
 }
