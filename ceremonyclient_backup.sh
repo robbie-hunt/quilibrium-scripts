@@ -29,10 +29,11 @@ SCRIPT_PARENT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print
 TIMESTAMP=$(date +%y%m%d-%H:%M:%S)
 
 HOSTNAME=$(hostname)
-PEER_ID=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key "peer_id")
 
+PEER_ID=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key "peer_id")
 CEREMONYCLIENT_ROOT_DIR=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key "ceremonyclient_root_dir")
 CEREMONYCLIENT_CONFIG_DIR=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key "ceremonyclient_config_dir")
+
 BACKUP_PARENT_DIR=$(dirname "$CEREMONYCLIENT_ROOT_DIR")
 BACKUP_DIR=$(echo "$BACKUP_PARENT_DIR/ceremonyclient_backup")
 BACKUP_ZIP="$BACKUP_DIR"_"$PEER_ID"_"$HOSTNAME"
@@ -48,6 +49,21 @@ while getopts "xhr:" opt; do
         *) USAGE_func; exit 0;;
     esac
 done
+
+if [[ -z "$PEER_ID" ]]; then
+    echo "ceremonyclient_backup.sh error [$(date)]: .localenv has no value for the peer_id key."
+    exit 1
+fi
+
+if [[ -z "$CEREMONYCLIENT_ROOT_DIR" ]]; then
+    echo "ceremonyclient_backup.sh error [$(date)]: .localenv has no value for the ceremonyclient_root_dir key."
+    exit 1
+fi
+
+if [[ -z "$CEREMONYCLIENT_CONFIG_DIR" ]]; then
+    echo "ceremonyclient_backup.sh error [$(date)]: .localenv has no value for the ceremonyclient_config_dir key."
+    exit 1
+fi
 
 # Make sure the remote destination supplied is correct
 if [[ "$REMOTE_NAME" == "" ]]; then
