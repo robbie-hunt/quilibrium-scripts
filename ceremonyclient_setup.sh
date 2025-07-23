@@ -492,6 +492,12 @@ FINISHING_TIPS_func() {
     echo "  option '--compact-db' and let it run until it quits."
     echo "- When running the node, use the '--config' flag with the config directory. If you're using the"
     echo "  ceremonyclient_start_cluster.sh script, this is already coded in."
+    echo "- Add the following into the 'db' section of the config:"
+    echo "  noticePercentage: 70"
+    echo "  warnPercentage: 90"
+    echo "  terminatePercentage: 95"
+    echo "- Use 'dataWorkerMemoryLimit' in the config of each machine to set a memory limit on each data worker. Defaults to 1.75GB."
+    echo "  943718400 bytes is 900MB in binary."
     # Terminal profile tips
     if [[ "$RELEASE_OS" == 'darwin' ]]; then
         echo "- A double-clickable file, ceremonyclient_view_logs.command, has been placed on your desktop to make it easier to view logs."
