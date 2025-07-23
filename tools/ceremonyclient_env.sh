@@ -3,7 +3,7 @@
 echo "4"
 
 # Set shell options
-set -eo pipefail
+#set -eo pipefail
 #set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
 
 echo "3"
