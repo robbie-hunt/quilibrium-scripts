@@ -234,6 +234,8 @@ CONTINUE_IF_TAILSCALE_PING_FAILS=0
 
 QUIET=0
 
+exit 0
+
 # Some variables for node paths and binaries
 QUIL_NODE_PATH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_node_dir')
 NODE_CONFIG_DIR=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_config_dir')
@@ -279,8 +281,6 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
-
-exit 0
 
 DETERMINE_GOMAXPROCES_func
 VALIDATE_START_CORE_INDEX_func
