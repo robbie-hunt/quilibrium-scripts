@@ -199,7 +199,6 @@ IS_MASTER_PROCESS_RUNNING_func() {
     return $?
 }
 
-echo ""
 echo "ceremonyclient_start_cluster.sh info [$(date)]: Starting script..."
 
 # Figure out what directory I'm in
@@ -234,6 +233,8 @@ TAILSCALE_PATH_NEEDS_TO_BE_HARDCODED=0
 CONTINUE_IF_TAILSCALE_PING_FAILS=0
 
 QUIET=0
+
+exit 0
 
 # Some variables for node paths and binaries
 QUIL_NODE_PATH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_node_dir')
