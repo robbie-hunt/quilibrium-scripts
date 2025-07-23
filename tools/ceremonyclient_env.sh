@@ -190,7 +190,6 @@ LATEST_VERSIONS_func() {
 
     if [[ $NODE_REQUESTED = 1 ]]; then
         # Get list of available node binaries from quilibrium.com
-        echo "bacon"
         local LATEST_NODE_FILES_RELEASE=$(curl -s -S $NODE_RELEASE_URL | grep $RELEASE_OS-$RELEASE_ARCH)
         local TYPE='node'
 
