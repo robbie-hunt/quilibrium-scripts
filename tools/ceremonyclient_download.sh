@@ -33,6 +33,7 @@ SCRIPT_PARENT_DIR=$(echo "$SCRIPT_DIR" | awk -F'/' 'BEGIN{OFS=FS} {$NF=""; print
 
 # Function to fetch the files from quilibrium.com
 FETCH_FILES_func() {
+    echo "eggs"
     if [[ ! $(curl -s -S "$URL" | grep -s "$FILE_PATTERN") ]]; then
         if [[ "$QUIET" == 1 ]]; then
             return 1
@@ -43,9 +44,11 @@ FETCH_FILES_func() {
         fi
     fi
 
+    echo "bacon"
     RELEASE_FILES_AVAILABLE=$(curl -s -S "$URL" | grep "$FILE_PATTERN")
 
     for RELEASE_FILE in $RELEASE_FILES_AVAILABLE; do
+        echo "cheese"
         if curl -s -S "https://releases.quilibrium.com/$RELEASE_FILE" > "$CEREMONYCLIENT_NODE_DIR/$RELEASE_FILE"; then
             if [[ "$QUIET" == 1 ]]; then
                 :
