@@ -280,9 +280,8 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-exit 0
-
 DETERMINE_GOMAXPROCES_func
+exit 0
 VALIDATE_START_CORE_INDEX_func
 VALIDATE_DATA_WORKER_COUNT_func
 CHECK_IF_IS_MASTER_NODE_func
