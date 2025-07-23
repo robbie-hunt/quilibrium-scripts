@@ -241,8 +241,6 @@ NODE_CONFIG_FILE=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonycl
 NODE_BINARY_NAME=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet' | awk -F'/' '{print $NF}')
 NODE_BINARY="$NODE_BINARY_NAME --config $NODE_CONFIG_DIR"
 
-exit 0
-
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -281,6 +279,8 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+exit 0
 
 DETERMINE_GOMAXPROCES_func
 VALIDATE_START_CORE_INDEX_func
