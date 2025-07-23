@@ -2,7 +2,7 @@
 
 # Set shell options
 set -eo pipefail
-#set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
+set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
 
 USAGE_func() {
     echo ""
