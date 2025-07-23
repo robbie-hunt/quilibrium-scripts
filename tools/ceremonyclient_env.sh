@@ -131,6 +131,7 @@ LATEST_RELEASE_VERSIONS_func() {
     local TYPE=$1
     local RELEASE_URL=$2
 
+    echo "eggs"
     # List all relevant files
     curl -s -S $RELEASE_URL | grep $RELEASE_LINE | \
     # Extract the version numbers using grep and awk
@@ -189,6 +190,7 @@ LATEST_VERSIONS_func() {
 
     if [[ $NODE_REQUESTED = 1 ]]; then
         # Get list of available node binaries from quilibrium.com
+        echo "bacon"
         local LATEST_NODE_FILES_RELEASE=$(curl -s -S $NODE_RELEASE_URL | grep $RELEASE_OS-$RELEASE_ARCH)
         local TYPE='node'
 
@@ -213,6 +215,7 @@ LATEST_VERSIONS_func() {
     fi
     if [[ $QCLIENT_REQUESTED = 1 ]]; then
         # Get list of available qclient binaries from quilibrium.com
+        echo "cheese"
         local LATEST_QCLIENT_FILES_RELEASE=$(curl -s -S $QCLIENT_RELEASE_URL | grep $RELEASE_OS-$RELEASE_ARCH)
         local TYPE='qclient'
 
