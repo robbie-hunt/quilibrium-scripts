@@ -145,7 +145,9 @@ LATEST_RELEASE_VERSIONS_func() {
 
 # Master function to find the latest version of the requested files
 # Qclient/node binaries, installed or available online, print filenames or just versions, quieten unnecessary output
+echo "1"
 LATEST_VERSIONS_func() {
+    echo "2"
     # Initialise options and their corresponding checkers
     local OPTIONS="${1:-}"
     local NODE_REQUESTED=0
