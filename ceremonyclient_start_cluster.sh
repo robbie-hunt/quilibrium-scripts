@@ -47,14 +47,11 @@ VALIDATE_START_CORE_INDEX_func() {
 }
 
 DETERMINE_GOMAXPROCES_func() {
-    echo "RELEASE_OS: $RELEASE_OS"
     # Determine GOMAXPROCS
     if [[ "$RELEASE_OS" == "darwin" ]]; then
         MAX_CORES=$(sysctl -n hw.logicalcpu)
     elif [[ "$RELEASE_OS" == "linux" ]]; then
         MAX_CORES=$(nproc)
-    else
-        echo "neither"
     fi
 }
 
