@@ -2,7 +2,7 @@
 
 # Set shell options
 set -ou pipefail
-set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
+#set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
 
 # To mitigate the "curl: could not resolve releases.quilibrium.com" error that
 # sometimes happens when the script runs right after boot
