@@ -4,6 +4,8 @@
 set -eo pipefail
 #set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
 
+echo "3"
+
 USAGE_func() {
     echo ""
     echo "This tool checks various aspects of the environment of this machine and the Quilibrium node."
