@@ -2,7 +2,7 @@
 
 # Set shell options
 set -ou pipefail
-set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
+#set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
 
 # Gracefully exit node when script is stopped
 KILL_PROCESS_func() {
@@ -282,7 +282,6 @@ done
 
 DETERMINE_GOMAXPROCES_func
 VALIDATE_START_CORE_INDEX_func
-exit 0
 VALIDATE_DATA_WORKER_COUNT_func
 CHECK_IF_IS_MASTER_NODE_func
 CHECK_TAILSCALE_func
