@@ -4,6 +4,8 @@
 set -ou pipefail
 #set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
 
+# To mitigate the "curl: could not resolve releases.quilibrium.com" error that
+# sometimes happens when the script runs right after boot
 sleep 20s
 
 # Gracefully exit node when script is stopped
@@ -240,13 +242,8 @@ QUIET=0
 QUIL_NODE_PATH=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_node_dir')
 NODE_CONFIG_DIR=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_config_dir')
 NODE_CONFIG_FILE=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -key 'ceremonyclient_config')
-echo "5"
 NODE_BINARY_NAME=$(bash $SCRIPT_DIR/tools/ceremonyclient_env.sh -latest-version 'node-installed-files-quiet' | awk -F'/' '{print $NF}')
-echo "6"
 NODE_BINARY="$NODE_BINARY_NAME --config $NODE_CONFIG_DIR"
-
-echo "end of start cluster script"
-exit 0
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do

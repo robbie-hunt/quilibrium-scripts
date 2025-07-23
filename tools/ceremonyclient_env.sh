@@ -6,8 +6,6 @@ echo "4"
 set -eo pipefail
 #set -x    # for debugging purposes - this prints the command that is to be executed before the command is executed
 
-echo "3"
-
 USAGE_func() {
     echo ""
     echo "This tool checks various aspects of the environment of this machine and the Quilibrium node."
@@ -149,9 +147,7 @@ LATEST_RELEASE_VERSIONS_func() {
 
 # Master function to find the latest version of the requested files
 # Qclient/node binaries, installed or available online, print filenames or just versions, quieten unnecessary output
-echo "1"
 LATEST_VERSIONS_func() {
-    echo "2"
     # Initialise options and their corresponding checkers
     local OPTIONS="${1:-}"
     local NODE_REQUESTED=0
@@ -195,7 +191,6 @@ LATEST_VERSIONS_func() {
 
     if [[ $NODE_REQUESTED = 1 ]]; then
         # Get list of available node binaries from quilibrium.com
-        echo "eeee"
         local LATEST_NODE_FILES_RELEASE=$(curl -s -S $NODE_RELEASE_URL | grep $RELEASE_OS-$RELEASE_ARCH)
         local TYPE='node'
 
