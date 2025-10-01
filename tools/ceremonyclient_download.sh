@@ -77,8 +77,8 @@ CHECK_FILESIZES_MAKE_EXECUTABLE_func() {
                 return 1
             fi
         else
-            # Check that the main node/qclient binary ar above 180MB
-            if [[ -n $(find "$FILE" -prune -size +180000000c) ]]; then
+            # Check that the main node/qclient binary ar above 150MB
+            if [[ -n $(find "$FILE" -prune -size +150000000c) ]]; then
                 chmod +x "$FILE"
             else
                 if [[ "$QUIET" == 1 ]]; then
