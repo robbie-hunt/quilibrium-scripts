@@ -256,6 +256,7 @@ ALTER_RELOAD_RESTART_DAEMONS_func() {
     # If macOS, then update launchctl plist file and restart service
     # Using launchctl commands 'bootout' and 'bootstrap' instead of the deprecated 'load' and 'unload' commands
     if [[ "$RELEASE_OS" == "darwin" ]]; then
+        echo "Password is required for 'sudo launchctl' commands."
         # Unload the plist before editing it and starting it up again
         sudo launchctl stop system/local.ceremonyclient
         sleep 2
