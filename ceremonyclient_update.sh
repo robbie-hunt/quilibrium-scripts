@@ -335,7 +335,7 @@ CHECK_LOCALENV_func
 
 # Make sure that if -c is used, -C and -D are also supplied
 if [[ "$CLUSTER" == 1 ]]; then
-    if [[ "$CLUSTER_CORE_INDEX_START" == 0 || "$CLUSTER_DATA_WORKER_COUNT" == 0 ]]; then
+    if [[ -z "$CLUSTER_CORE_INDEX_START" || -z "$CLUSTER_DATA_WORKER_COUNT" ]]; then
         echo "Error: when using -c to indicate that this node is being set up as part of a cluster,"
         echo "please also use the [-C core index] and [-D number of data workers] flags."
         exit 1
