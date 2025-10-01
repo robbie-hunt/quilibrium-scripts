@@ -22,7 +22,7 @@ USAGE_func() {
     echo ""
     echo "Runs the Quilibrium cluster."
     echo ""
-    echo "USAGE: bash ceremonyclient_start_cluster.sh [-h] [-x] [-q] [--check-tailscale] [--check-tailscale-continue-anyway] [--core-index-start] [--data-worker-count]"
+    echo "USAGE: bash ceremonyclient_start_cluster.sh [-h] [-x] [-q] [--check-tailscale] [--check-tailscale-continue-anyway] [--core-index-start 0-9+] [--data-worker-count 0-9+]"
     echo ""
     echo "       -h                                   Display this help dialogue."
     echo "       -x                                   For debugging the script; sets the x shell builtin, 'set -x'."

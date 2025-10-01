@@ -8,14 +8,17 @@ USAGE_func() {
     echo ""
     echo "Updates the Quilibrium node binaries (including qclient) to latest versions, and restarts node daemons."
     echo ""
-    echo "USAGE: bash ceremonyclient_update.sh [-h] [-x] [-c]"
+    echo "USAGE: bash ceremonyclient_update.sh [-h] [-x] [-c] [-C 0-9+] [-D 0-9+] [-f]"
     echo ""
     echo "       -h    Display this help dialogue."
     echo "       -x    For debugging the script; sets the x shell builtin, 'set -x'."
     echo "       -c    This node is part of a cluster."
     echo "             (By default this is set to null, meaning this node is run as a standalone node.)"
+    echo "       -C    Cluster core index start."
+    echo "       -D    Cluster data worker count."
     echo "       -d    (Optional) Directory to update binaries in."
     echo "             By default, the directory for updates is determined by the 'ceremonyclient_node_dir' key in .localenv."
+    echo "       -f    Force an update; replace the current node/qclient with the latest version."
     echo ""
     exit 0
 }
@@ -35,6 +38,13 @@ COMPARE_VERSIONS_func() {
     local FILE_INSTALLED_PATH="$1"
     local FILE_RELEASE="$2"
 
+    if [[ "$FORCE_UPDATE" == 1 ]]; then
+        UPDATE_AVAILABLE=1
+        echo "Replacement forced for $FILE_INSTALLED."
+        bash $SCRIPT_DIR/tools/ceremonyclient_download.sh -f "$FILE_RELEASE"
+        return
+    fi
+    
     if [[ "$FILE_INSTALLED" == "$FILE_RELEASE" ]]; then
         echo "$FILE_INSTALLED file installed is the latest version, no need to update."
     else
@@ -317,7 +327,9 @@ CLUSTER_DATA_WORKER_COUNT=0
 # Supply a node directory using the -d flag
 DIRECTORY=0
 
-while getopts "xhqcC:D:d:" opt; do
+FORCE_UPDATE=0
+
+while getopts "xhqcC:D:d:f" opt; do
     case "$opt" in
         x) set -x;;
         h) USAGE_func; exit 0;;
@@ -326,6 +338,7 @@ while getopts "xhqcC:D:d:" opt; do
         C) CLUSTER_CORE_INDEX_START="$OPTARG";;
         D) CLUSTER_DATA_WORKER_COUNT="$OPTARG";;
         d) DIRECTORY="$OPTARG";;
+        f) FORCE_UPDATE=1;;
         *) USAGE_func; exit 0;;
     esac
 done
